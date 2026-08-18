@@ -1,6 +1,11 @@
 # DeskFlow-AI (ResolveDesk-AI)
 > **Enterprise-Grade Zero-Trust IT Service Management (ITSM) Platform**  
-> Built end-to-end with React 19 / React, Tailwind CSS, Recharts, Node.js, Express, MongoDB, Socket.IO, and Python FastAPI.
+> Built end-to-end with React, Tailwind CSS, Recharts, Node.js, Express, MongoDB Atlas, Socket.IO, and Python FastAPI.
+
+### 🌐 Live Production Deployment
+- 🖥️ **Live Web Application (Vercel):** [https://resolve-desk-ai.vercel.app](https://resolve-desk-ai.vercel.app)
+- ⚙️ **Live API & Socket Server (Render):** [https://resolvedesk-ai.onrender.com](https://resolvedesk-ai.onrender.com)
+- 🗄️ **Database Cluster:** MongoDB Atlas Cloud (`deskflowdb`)
 
 ---
 
