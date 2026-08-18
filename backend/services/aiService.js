@@ -49,11 +49,11 @@ const fallbackRedactPII = (text) => {
  * Intelligent Remediation generator powered by Gemini AI when API key is available
  */
 const generateGeminiRemediation = async (title, description, category) => {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('AQ.Ab8RN6')) {
-    // API key placeholder or key format
-  }
+  const apiKey = process.env.GEMINI_API_KEY || GEMINI_API_KEY;
+  if (!apiKey) return null;
+
   try {
-    const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     const prompt = `You are a Principal SRE & IT Service Desk triage AI. Given this IT incident:
 Title: ${title}
 Category: ${category}
@@ -66,7 +66,7 @@ Provide a concise 2-sentence actionable remediation procedure and root-cause fix
       {
         contents: [{ parts: [{ text: prompt }] }],
       },
-      { timeout: 3500 }
+      { timeout: 4000 }
     );
 
     const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -74,7 +74,7 @@ Provide a concise 2-sentence actionable remediation procedure and root-cause fix
       return generatedText.trim();
     }
   } catch (err) {
-    // Graceful fallback to rule-based remediation
+    // Graceful fallback to rule-based triage remediation
   }
   return null;
 };
