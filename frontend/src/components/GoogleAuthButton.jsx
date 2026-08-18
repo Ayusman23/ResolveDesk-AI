@@ -3,7 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Mail, User, ShieldCheck, ArrowRight, X, Sparkles, CheckCircle2 } from 'lucide-react';
 
-const GOOGLE_CLIENT_ID = '263358758822-5uiiebkt7gvrtr6njkls117r03j6fkmk.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '263358758822-319m1p38k3ns8fdhcdfs32711kqp3qfa.apps.googleusercontent.com';
 
 const GoogleAuthButton = ({ role = 'client', text = 'Continue with Google', onSuccess, onError }) => {
   const { loginWithGoogle } = useAuth();
