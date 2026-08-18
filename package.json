@@ -1,0 +1,23 @@
+{
+  "name": "deskflow-ai-monorepo",
+  "version": "1.0.0",
+  "description": "DeskFlow-AI / ResolveDesk-AI Enterprise Zero-Trust ITSM Platform",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:ai": "cd ai-engine && python main.py",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "itsm",
+    "ai-triage",
+    "zero-trust",
+    "spacy",
+    "nlp",
+    "pii-redaction",
+    "websockets"
+  ],
+  "author": "DeskFlow-AI Engineering",
+  "license": "MIT"
+}

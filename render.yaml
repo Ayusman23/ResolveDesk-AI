@@ -1,0 +1,32 @@
+services:
+  # 1. Node.js Backend Service
+  - type: web
+    name: deskflow-ai-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_ORIGIN
+        value: "*"
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # 2. Python FastAPI AI Engine Microservice
+  - type: web
+    name: deskflow-ai-engine
+    env: python
+    rootDir: ai-engine
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CONFIDENCE_THRESHOLD
+        value: "0.65"
