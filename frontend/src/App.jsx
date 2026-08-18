@@ -47,7 +47,7 @@ function App() {
                 <Route
                   path="/manager"
                   element={
-                    <ProtectedRoute allowedRoles={['developer', 'manager']}>
+                    <ProtectedRoute allowedRoles={['manager']}>
                       <ManagerAnalytics />
                     </ProtectedRoute>
                   }
