@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 import { ShieldCheck, User, Mail, Lock, Building, AlertCircle } from 'lucide-react';
 
 const RegisterPage = () => {
@@ -155,7 +156,29 @@ const RegisterPage = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-500">
+          {/* Google Sign Up Divider */}
+          <div className="mt-6 mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider">
+                  Or sign up with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <GoogleAuthButton
+                role={role}
+                text="Sign up with Google"
+                onError={(msg) => setError(msg)}
+              />
+            </div>
+          </div>
+
+          <div className="text-center text-xs text-slate-500">
             Already registered?{' '}
             <Link to="/login" className="font-semibold text-brand-600 hover:text-brand-500 underline">
               Sign in

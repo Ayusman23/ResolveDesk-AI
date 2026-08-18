@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 import { ShieldCheck, Lock, Mail, ArrowRight, UserCheck, AlertCircle, Sparkles } from 'lucide-react';
 
 const LoginPage = () => {
@@ -164,11 +165,33 @@ const LoginPage = () => {
               disabled={submitting}
               className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 transition-all cursor-pointer"
             >
-              {submitting ? 'Authenticating...' : 'Sign In'}
+              {submitting ? 'Authenticating...' : 'Sign In with Email'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-500">
+          {/* Google Sign In Divider */}
+          <div className="mt-6 mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <GoogleAuthButton
+                role="client"
+                text="Sign in with Google"
+                onError={(msg) => setError(msg)}
+              />
+            </div>
+          </div>
+
+          <div className="text-center text-xs text-slate-500">
             Don't have an enterprise account?{' '}
             <Link to="/register" className="font-semibold text-brand-600 hover:text-brand-500 underline">
               Register here

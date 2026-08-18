@@ -116,6 +116,76 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// @route   POST /api/auth/google
+// @desc    Google OAuth Sign In / Sign Up
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    const { credential, profile, role } = req.body;
+
+    let email = profile?.email;
+    let name = profile?.name;
+    let avatar = profile?.picture || profile?.avatar || '';
+
+    // If Google ID token is provided, decode payload
+    if (credential) {
+      const decoded = jwt.decode(credential);
+      if (decoded) {
+        email = decoded.email;
+        name = decoded.name;
+        avatar = decoded.picture || '';
+      }
+    }
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Could not extract valid Google account information.',
+      });
+    }
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Auto-register new Google user
+      const randomPassword = 'GAuth_' + Math.random().toString(36).slice(-10) + '!2026';
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email,
+        password: randomPassword,
+        role: role || 'client',
+        department: 'Google Workspace',
+        avatar,
+      });
+    } else if (avatar && !user.avatar) {
+      user.avatar = avatar;
+      await user.save();
+    }
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        avatar: user.avatar,
+      },
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Google Authentication failed.',
+    });
+  }
+});
+
 // @route   GET /api/auth/me
 // @desc    Get current authenticated user profile
 // @access  Private

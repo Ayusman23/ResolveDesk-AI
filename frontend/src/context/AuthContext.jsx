@@ -78,6 +78,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (credential, profile, role = 'client') => {
+    try {
+      const response = await api.post('/auth/google', {
+        credential,
+        profile,
+        role,
+      });
+      if (response.data.success) {
+        const { token: newToken, user: newUser } = response.data;
+        setToken(newToken);
+        setUser(newUser);
+        localStorage.setItem('deskflow_token', newToken);
+        localStorage.setItem('deskflow_user', JSON.stringify(newUser));
+        return { success: true, user: newUser };
+      }
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || 'Google Authentication failed.',
+      };
+    }
+  };
+
   const quickDemoLogin = async (roleName) => {
     const demoAccounts = {
       client: { email: 'alice.client@enterprise.corp', password: 'password123' },
@@ -105,6 +128,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         login,
         register,
+        loginWithGoogle,
         quickDemoLogin,
         logout,
       }}
