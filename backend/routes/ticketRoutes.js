@@ -74,7 +74,7 @@ router.post('/', protect, async (req, res) => {
       15,
       { deviceContext }
     );
-    await delay(350);
+    await delay(40);
 
     // --- STEP 2: In-Flight PII Redaction (Feature 1) ---
     recordStep(
@@ -94,7 +94,7 @@ router.post('/', protect, async (req, res) => {
       50,
       { piiCount: piiEntitiesFound.length, sanitizedPreview: sanitizedDescription.substring(0, 120) }
     );
-    await delay(350);
+    await delay(40);
 
     // --- STEP 3: Semantic Duplicate Detection Check (Feature 3) ---
     recordStep(
@@ -103,7 +103,7 @@ router.post('/', protect, async (req, res) => {
       'Calculating cosine similarity across active enterprise incident vectors...',
       65
     );
-    const activeTickets = await Ticket.find({ status: { $in: ['Open', 'In Progress'] } }).select('title sanitizedDescription priority status');
+    const activeTickets = await Ticket.find({ status: { $in: ['Open', 'In Progress'] } }).select('title sanitizedDescription priority status category');
     const duplicateMatches = await checkDuplicates(title, sanitizedDescription, activeTickets);
     recordStep(
       'EMBEDDING_DUPLICATE_CHECK',
@@ -112,7 +112,7 @@ router.post('/', protect, async (req, res) => {
       75,
       { topDuplicates: duplicateMatches.duplicates || [] }
     );
-    await delay(300);
+    await delay(40);
 
     // --- STEP 4: NLP Triage Engine & Agentic Fallback (Feature 2 & 6) ---
     recordStep(
@@ -132,7 +132,7 @@ router.post('/', protect, async (req, res) => {
         { sources: triageResult.agenticSearchSources }
       );
     }
-    await delay(300);
+    await delay(40);
 
     // --- STEP 5: SLA Breach Predictor (Feature 8) ---
     const { deadline, hours } = calculateDeadline(triageResult.priority);
@@ -156,7 +156,7 @@ router.post('/', protect, async (req, res) => {
       95,
       { slaRisk: slaPrediction }
     );
-    await delay(250);
+    await delay(40);
 
     // --- STEP 6: Zero-Trust Persistence (Feature 4) ---
     const ticket = await Ticket.create({
