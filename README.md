@@ -106,6 +106,8 @@ DeskFlow-AI is structured around three distinct enterprise roles:
 ### 3. IT Director / Manager View — `/manager`
 *Target Audience: IT Directors, SOC2 Compliance Officers, Service Delivery Managers.*
 
+![Manager Analytics Dashboard](./Assets/Manager.png)
+
 1. **Executive KPI dashboard** — SLA compliance rate, average model confidence, total PII entities scrubbed, live queue backlog.
 2. **SLA breach-risk radar** — a mode-aware Recharts visualization forecasting which incidents are about to blow their deadline.
 3. **Category volume breakdown** — `Hardware · Network · Access · Software · Security`.
