@@ -1,7 +1,7 @@
 <div align="center">
 
-# 🛡️ DeskFlow-AI
-### AI-Powered, Zero-Trust IT Service Management Platform
+# 🛡️ DeskFlow-AI (ResolveDesk-AI)
+### Enterprise Zero-Trust IT Service Management & Real-Time Intelligence Platform
 
 **A self-triage service desk that reads a ticket, scrubs the secrets out of it, and routes it — before a human ever sees it.**
 
@@ -12,7 +12,11 @@
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel_Edge-black?style=for-the-badge&logo=vercel&logoColor=white)](https://resolve-desk-ai.vercel.app)
 [![Backend](https://img.shields.io/badge/Backend-Render_Cloud-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://resolvedesk-ai.onrender.com)
 
-**[🌐 Live App](https://resolve-desk-ai.vercel.app)** &nbsp;•&nbsp; **[⚙️ Live API Health](https://resolvedesk-ai.onrender.com/health)** &nbsp;•&nbsp; **[📖 Build Retrospective](./PROBLEMS_FACED.md)**
+**[🌐 Live Production Web App](https://resolve-desk-ai.vercel.app)** &nbsp;•&nbsp; **[⚙️ Live API Health](https://resolvedesk-ai.onrender.com/health)** &nbsp;•&nbsp; **[📖 Engineering Retrospective](./PROBLEMS_FACED.md)**
+
+<br><br>
+
+![DeskFlow-AI Landing Page](./Assets/landingpage.png)
 
 </div>
 
@@ -35,12 +39,13 @@ Every enterprise service desk quietly bleeds money and risk in the same three pl
 - ⚡ **Classifies and prioritizes in under 180ms**, escalating to an agentic runbook when confidence is low
 - 📡 **Streams its own reasoning** — every pipeline stage, live, over WebSockets
 - 🔐 **Enforces role-based data access at the database layer**, not just the UI
+- 🌓 **Universal Dual Theme Support** — seamless toggle between Dark Cyber and Light Enterprise modes
 
 <br>
 
 ## 🏛️ System Architecture
 
-A three-tier system where each layer has exactly one job — built to demonstrate real separation of concerns, not just to look impressive on a diagram.
+A three-tier distributed system where each layer has exactly one job:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -48,65 +53,67 @@ A three-tier system where each layer has exactly one job — built to demonstrat
 │    Client Portal   │   Developer Kanban   │   Manager SOC2 Dashboard    │
 │                         Google OAuth 2.0 · JWT                          │
 └────────────────────────────┬────────────────────────────┬───────────────┘
-                              │ Axios / REST + JWT          │ Socket.IO Stream
-                              ▼                             ▼
+                             │ Axios / REST + JWT         │ Socket.IO Stream
+                             ▼                            ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │               NODE.JS + EXPRESS CONTROL PLANE (PORT 5000)               │
 │  • JWT auth & Google OAuth token verification                           │
 │  • Zero-trust role-based MongoDB projections                            │
 │  • Socket.IO multi-room telemetry broadcasting                          │
-│  • Fallback NLP triage + Gemini-assisted SRE remediation                │
+│  • In-memory NLP triage fallback + Google Gemini 1.5 SRE bridge         │
 └────────────────────────────┬────────────────────────────────────────────┘
-                              │ Internal service call (< 1500ms)
-                              ▼
+                             │ HTTP (< 1.5s timeout)
+                             ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │               PYTHON FASTAPI AI MICROSERVICE (PORT 8000)                │
 │  • spaCy NER + regex PII redaction pipeline                             │
-│  • TF-IDF cosine-similarity duplicate detection engine                  │
-│  • Multi-class incident classifier (category + priority scoring)        │
-│  • Agentic runbook retrieval & synthesis                                │
+│  • TF-IDF cosine similarity semantic duplicate detector                 │
+│  • Multi-class incident classification engine                           │
+│  • Autonomous agentic runbook synthesis                                 │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Stack:** React 18 · Vite · Tailwind CSS · Recharts · Node.js · Express · MongoDB Atlas · Socket.IO · Python · FastAPI · spaCy · Google OAuth 2.0
-
 <br>
 
-## 👥 Built for Three Real Roles, Not One Generic Login
+## 👥 User Personas & Workflows
 
-DeskFlow-AI isn't a single dashboard with permission flags bolted on — each role gets a purpose-built interface.
+DeskFlow-AI is structured around three distinct enterprise roles:
 
-### 🙋 Client Portal — `/client`
-*Employees and non-technical staff filing issues.*
+### 1. Client / End-User View — `/client`
+*Target Audience: Employees, non-technical staff needing IT assistance.*
 
-1. **Silent device fingerprinting** — OS, browser, resolution, and network context captured automatically, no manual form fields.
-2. **Live PII redaction preview** — passwords, keys, and emails are highlighted and scrubbed as the user types.
-3. **Duplicate outage warning** — cosine-similarity matching surfaces "this looks like an active VPN outage" before submission.
-4. **X-Ray telemetry stream** — a live modal shows the ticket moving through `Harvesting → Scrubbing → Correlation → NLP Triage → SLA Projection`.
-5. **Live incident timeline** — status, priority, and SLA deadline, updated in real time.
+![Client Self-Service Portal](./Assets/Client.png)
 
-### 🛠️ Developer / SRE Console — `/developer`
-*Engineers triaging and resolving incidents.*
+1. **Context auto-harvesting** — captures browser, OS, screen resolution, and network type without manual input.
+2. **In-flight PII preview** — client-side regex visualizes secrets being scrubbed in real time as the user types.
+3. **Outage duplicate warning** — alerts the user if their issue matches an active incident via vector cosine similarity.
+4. **WebSocket X-Ray modal** — streams the 5-stage AI ingestion pipeline live on submit.
 
-1. **Four-stage Kanban** — `Open Backlog → In Investigation → Resolved & Verified → Closed / Archived`.
-2. **Dual-view clearance** — toggle between the sanitized description and the raw diagnostic payload, gated by role.
-3. **Agentic runbook synthesis** — auto-generated remediation SOPs with links to internal documentation.
-4. **Internal diagnosis notes** — timestamped, engineer-only.
-5. **Optimistic one-click transitions** — instant UI update, broadcast to the client over Socket.IO.
+---
 
-### 📊 IT Director / Manager View — `/manager`
-*SOC2 compliance and service-delivery oversight.*
+### 2. Developer / SRE Engineer View — `/developer`
+*Target Audience: IT Engineers, System Administrators, DevOps Leads.*
+
+![Developer Kanban Board](./Assets/Deceloper.png)
+
+1. **Interactive Kanban board** — `Open Backlog` → `In Investigation` → `Resolved & Verified` → `Closed / Archived`.
+2. **Dual-payload inspection** — toggle between sanitized and raw diagnostic payloads (role-restricted clearance).
+3. **Agentic runbook SOPs** — step-by-step remediation procedures pulled automatically when AI confidence is `< 0.65`.
+4. **Internal investigation notes** — timestamped engineering diagnosis thread.
+
+---
+
+### 3. IT Director / Manager View — `/manager`
+*Target Audience: IT Directors, SOC2 Compliance Officers, Service Delivery Managers.*
 
 1. **Executive KPI dashboard** — SLA compliance rate, average model confidence, total PII entities scrubbed, live queue backlog.
-2. **SLA breach-risk radar** — a Recharts visualization forecasting which incidents are about to blow their deadline.
+2. **SLA breach-risk radar** — a mode-aware Recharts visualization forecasting which incidents are about to blow their deadline.
 3. **Category volume breakdown** — `Hardware · Network · Access · Software · Security`.
 4. **PII redaction audit trail** — a compliance-ready log of every credential type scrubbed and when.
 
 <br>
 
-## ⚙️ Engineering Highlights
-
-*What each feature actually demonstrates.*
+## ⚙️ The 8 Novel Enterprise Features
 
 | # | Feature | What It Does | Where It Lives |
 |---|---|---|---|
@@ -121,12 +128,18 @@ DeskFlow-AI isn't a single dashboard with permission flags bolted on — each ro
 
 <br>
 
-## 🔒 Security Architecture
+## 🔒 Security Architecture & Real Google OAuth 2.0
 
-- **Google Identity Services (GIS) & OAuth 2.0** — real popup auth, tokens verified server-side against Google's official token-info endpoint.
-- **JWT with role claims** — signed, 30-day tokens carrying `client` / `developer` / `manager` permissions.
-- **Zero-trust CORS** — strict origin isolation between the Vercel edge frontend and the Render backend.
-- **Database-layer enforcement** — access control lives in the query projection, not just a UI `if` statement, so a compromised frontend can't leak restricted fields.
+<div align="center">
+  <img src="./Assets/Signin.png" width="48%" alt="Sign In & Role Simulator" />
+  <img src="./Assets/Register.png" width="48%" alt="Identity Registration" />
+</div>
+
+DeskFlow-AI implements multi-layered enterprise security:
+- **Google Identity Services (GIS) & OAuth 2.0:** Official Google popup authentication. Tokens are cryptographically verified server-side against Google's public OAuth verification endpoints (`https://oauth2.googleapis.com/tokeninfo`).
+- **JWT Token Expiration & Role Claims:** Standard 30-day cryptographically signed tokens containing role permissions (`client`, `developer`, `manager`).
+- **CORS & Zero-Trust Origin Isolation:** Strict cross-origin communication policies between Vercel Edge frontend and Render backend.
+- **Universal Dual Theme Engine:** 1-click seamless toggle between Dark Cyber and Light Enterprise modes with persistent preferences.
 
 <br>
 
@@ -169,83 +182,41 @@ DeskFlow-AI isn't a single dashboard with permission flags bolted on — each ro
 
 <br>
 
-## 🚀 Quick Start
+## 🚀 Local Quick Start
 
 ### Prerequisites
 `Node.js v18+` · `npm` · `Python 3.10+` · `pip` · `MongoDB` (local or Atlas)
 
 ```bash
-# 1. Backend — Express + Socket.IO
+# 1. Backend — Express + Socket.IO (Port 5000)
 cd backend
 npm install
-npm run seed      # seeds demo users + sample incidents
-npm run dev        # → http://localhost:5000
+npm run seed      # Seeds initial demo accounts
+npm run dev
 
-# 2. AI Microservice — FastAPI
+# 2. AI Microservice — FastAPI (Port 8000)
 cd ai-engine
 pip install -r requirements.txt
-python main.py     # → http://localhost:8000
+python main.py
 
-# 3. Frontend — Vite
+# 3. Frontend — React + Vite (Port 5173)
 cd frontend
 npm install
-npm run dev         # → http://localhost:5173
+npm run dev
 ```
 
 <br>
 
-## 🔑 Environment Variables
+## 👤 Pre-Seeded Demo Accounts (1-Click Login)
 
-**`backend/.env`**
-```ini
-PORT=5000
-NODE_ENV=development
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/deskflowdb?retryWrites=true&w=majority
-JWT_SECRET=your_super_secret_enterprise_jwt_key
-CLIENT_ORIGIN=http://localhost:5173
-GEMINI_API_KEY=your_optional_gemini_api_key
-AI_ENGINE_URL=http://localhost:8000
-AI_ENGINE_ENABLED=true
-```
-
-**`frontend/.env.production`**
-```ini
-VITE_API_URL=https://resolvedesk-ai.onrender.com/api
-VITE_SOCKET_URL=https://resolvedesk-ai.onrender.com
-VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
-```
-
-> ⚠️ Never commit real secrets. The values above are placeholders — rotate any keys that were previously exposed in this repo's history.
-
-<br>
-
-## 🧪 Try It Now — Pre-Configured Demo Accounts
-
-No sign-up needed. Use the one-click **Simulate** menu on the live app, or log in directly:
-
-| Role | Name | Email | Password | What You'll See |
+| Role | Name | Enterprise Email | Password | Access |
 |---|---|---|---|---|
-| 🙋 **Client** | Alice Henderson | `alice.client@enterprise.corp` | `password123` | Self-service ticket filing, live X-Ray telemetry |
-| 🛠️ **Developer** | Sarah Connor (SRE Lead) | `dev.sarah@enterprise.corp` | `password123` | Kanban triage, raw PII clearance, runbook SOPs |
-| 📊 **Manager** | David Vance (IT Director) | `manager.david@enterprise.corp` | `password123` | Executive SOC2 analytics, SLA risk radar |
+| **Client** | Alice Henderson | `alice.client@enterprise.corp` | `password123` | Self-Service Ingest, Real-Time X-Ray |
+| **Developer** | Sarah Connor (SRE) | `dev.sarah@enterprise.corp` | `password123` | Kanban Board, Dual Payload View, Runbooks |
+| **Manager** | David Vance (IT Director) | `manager.david@enterprise.corp` | `password123` | Executive Analytics, SLA Radar, PII Audit |
 
 <br>
-
-## 🗺️ Roadmap
-
-- [ ] Slack/MS Teams incident notifications
-- [ ] Configurable SLA policies per team
-- [ ] Fine-tuned in-house classifier to replace the fallback NLP model
-- [ ] Multi-tenant support for MSP deployments
-
-<br>
-
-## 📬 Get In Touch
-
-Have questions about the architecture, or want to talk about how this maps to a role on your team? Open an issue, or reach out directly — I'm happy to walk through any part of the design.
 
 <div align="center">
-
-<sub>© 2026 DeskFlow-AI. Built as an independent engineering project.</sub>
-
+  <p>© 2026 DeskFlow-AI Engineering. All enterprise rights reserved.</p>
 </div>

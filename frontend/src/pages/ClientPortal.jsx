@@ -38,7 +38,6 @@ const ClientPortal = () => {
   const [duplicates, setDuplicates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTelemetryModalOpen, setIsTelemetryModalOpen] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState(null);
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
 
@@ -195,7 +194,7 @@ const ClientPortal = () => {
   });
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#080A10] text-[#EDF1F7] py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto selection:bg-[#22E6B8] selection:text-[#080A10]">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#F8FAFC] dark:bg-[#080A10] text-slate-900 dark:text-[#EDF1F7] py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-colors duration-200">
       
       {/* Telemetry Ingestion Modal */}
       <XRayTelemetryModal
@@ -205,20 +204,20 @@ const ClientPortal = () => {
       />
 
       {/* Header Banner */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0D1119] p-6 rounded-xl border border-white/[0.08] shadow-2xl">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#0D1119] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl">
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#22E6B8]/15 border border-[#22E6B8]/30 flex items-center justify-center text-[#22E6B8]">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-[#22E6B8]/15 border border-emerald-200 dark:border-[#22E6B8]/30 flex items-center justify-center text-emerald-700 dark:text-[#22E6B8]">
               <Terminal className="w-4.5 h-4.5" />
             </div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-[#EDF1F7]">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-[#EDF1F7]">
               Client Self-Service & Triage Portal
             </h1>
-            <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#22E6B8]/10 text-[#22E6B8] border border-[#22E6B8]/30">
+            <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-[#22E6B8]/10 dark:text-[#22E6B8] border border-emerald-200 dark:border-[#22E6B8]/30">
               Zero-Trust Client
             </span>
           </div>
-          <p className="font-mono text-[12px] text-[#8791A3] mt-1">
+          <p className="font-mono text-[12px] text-slate-500 dark:text-[#8791A3] mt-1">
             Automatic in-flight credential scrubbing, contextual device harvesting, and real-time AI triage
           </p>
         </div>
@@ -226,9 +225,9 @@ const ClientPortal = () => {
         <div className="flex items-center space-x-3">
           <button
             onClick={fetchTickets}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#080A10] border border-white/[0.08] text-[12px] font-mono text-[#8791A3] hover:text-[#EDF1F7] hover:border-white/[0.2] transition-colors cursor-pointer"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#080A10] border border-slate-200 dark:border-white/[0.08] text-[12px] font-mono text-slate-600 dark:text-[#8791A3] hover:text-slate-900 dark:hover:text-[#EDF1F7] hover:border-slate-300 dark:hover:border-white/[0.2] transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loadingTickets ? 'animate-spin text-[#22E6B8]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingTickets ? 'animate-spin text-emerald-600 dark:text-[#22E6B8]' : ''}`} />
             <span>Sync</span>
           </button>
         </div>
@@ -238,40 +237,40 @@ const ClientPortal = () => {
         
         {/* Left Column: Ticket Ingestion Form */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-[#0D1119] p-6 rounded-xl border border-white/[0.08] shadow-2xl space-y-5">
+          <div className="bg-white dark:bg-[#0D1119] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-5">
             
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-              <h2 className="font-display text-[16px] font-semibold text-[#EDF1F7] flex items-center gap-2">
-                <PlusCircle className="w-4 h-4 text-[#22E6B8]" />
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] pb-3">
+              <h2 className="font-display text-[16px] font-semibold text-slate-900 dark:text-[#EDF1F7] flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-emerald-600 dark:text-[#22E6B8]" />
                 Submit Support Incident
               </h2>
-              <span className="font-mono text-[10px] text-[#565F70]">Real-Time Ingestion</span>
+              <span className="font-mono text-[10px] text-slate-400 dark:text-[#565F70]">Real-Time Ingestion</span>
             </div>
 
             {/* Quick Demo Pre-fills */}
-            <div className="p-3 bg-[#080A10] rounded-lg border border-white/[0.06]">
-              <span className="font-mono text-[10.5px] uppercase font-semibold text-[#8791A3] flex items-center gap-1.5 mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#22E6B8]" /> Quick Telemetry Scenarios:
+            <div className="p-3.5 bg-slate-50 dark:bg-[#080A10] rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
+              <span className="font-mono text-[10.5px] uppercase font-semibold text-slate-500 dark:text-[#8791A3] flex items-center gap-1.5 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-[#22E6B8]" /> Quick Telemetry Scenarios:
               </span>
               <div className="flex flex-wrap gap-1.5 font-mono text-[11px]">
                 <button
                   type="button"
                   onClick={() => fillSampleTicket('vpn')}
-                  className="px-2.5 py-1 rounded bg-[#22E6B8]/10 text-[#22E6B8] border border-[#22E6B8]/30 hover:bg-[#22E6B8]/20 transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-[#22E6B8]/10 dark:text-[#22E6B8] border border-emerald-200 dark:border-[#22E6B8]/30 hover:bg-emerald-100 dark:hover:bg-[#22E6B8]/20 transition-colors cursor-pointer"
                 >
                   VPN Flapping + Email
                 </button>
                 <button
                   type="button"
                   onClick={() => fillSampleTicket('secret')}
-                  className="px-2.5 py-1 rounded bg-[#FF5C6C]/10 text-[#FF5C6C] border border-[#FF5C6C]/30 hover:bg-[#FF5C6C]/20 transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded bg-rose-50 text-rose-700 dark:bg-[#FF5C6C]/10 dark:text-[#FF5C6C] border border-rose-200 dark:border-[#FF5C6C]/30 hover:bg-rose-100 dark:hover:bg-[#FF5C6C]/20 transition-colors cursor-pointer"
                 >
                   AWS Key Scrubbing
                 </button>
                 <button
                   type="button"
                   onClick={() => fillSampleTicket('db')}
-                  className="px-2.5 py-1 rounded bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 hover:bg-[#38BDF8]/20 transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded bg-sky-50 text-sky-700 dark:bg-[#38BDF8]/10 dark:text-[#38BDF8] border border-sky-200 dark:border-[#38BDF8]/30 hover:bg-sky-100 dark:hover:bg-[#38BDF8]/20 transition-colors cursor-pointer"
                 >
                   DB Password Scrub
                 </button>
@@ -283,7 +282,7 @@ const ClientPortal = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-[#8791A3] mb-1.5">
+                <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[#8791A3] mb-1.5">
                   Incident Title
                 </label>
                 <input
@@ -292,12 +291,12 @@ const ClientPortal = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Cisco VPN repeatedly terminates session"
-                  className="w-full px-3 py-2 text-[13px] font-mono border border-white/[0.09] rounded-lg bg-[#080A10] text-[#EDF1F7] placeholder-[#565F70] focus:ring-1 focus:ring-[#22E6B8] focus:border-[#22E6B8] transition-colors"
+                  className="w-full px-3 py-2 text-[13px] font-mono border border-slate-300 dark:border-white/[0.09] rounded-lg bg-slate-50/60 dark:bg-[#080A10] text-slate-900 dark:text-[#EDF1F7] placeholder-slate-400 dark:placeholder-[#565F70] focus:ring-1 focus:ring-emerald-500 dark:focus:ring-[#22E6B8] focus:border-emerald-500 dark:focus:border-[#22E6B8] transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-[#8791A3] mb-1.5">
+                <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-[#8791A3] mb-1.5">
                   Detailed Description & Logs
                 </label>
                 <textarea
@@ -306,21 +305,21 @@ const ClientPortal = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the incident. In-flight PII scrubber will automatically strip passwords, keys, and emails before database write."
-                  className="w-full px-3 py-2 text-[13px] font-mono border border-white/[0.09] rounded-lg bg-[#080A10] text-[#EDF1F7] placeholder-[#565F70] focus:ring-1 focus:ring-[#22E6B8] focus:border-[#22E6B8] transition-colors"
+                  className="w-full px-3 py-2 text-[13px] font-mono border border-slate-300 dark:border-white/[0.09] rounded-lg bg-slate-50/60 dark:bg-[#080A10] text-slate-900 dark:text-[#EDF1F7] placeholder-slate-400 dark:placeholder-[#565F70] focus:ring-1 focus:ring-emerald-500 dark:focus:ring-[#22E6B8] focus:border-emerald-500 dark:focus:border-[#22E6B8] transition-colors"
                 />
               </div>
 
               {/* Real-time In-Flight PII Redactor Live Visualizer */}
               {detectedPIIPreview && (
-                <div className="p-3 bg-[#22E6B8]/[0.06] border border-[#22E6B8]/30 rounded-lg space-y-1.5 animate-in fade-in">
-                  <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-[#22E6B8]">
+                <div className="p-3 bg-emerald-50 dark:bg-[#22E6B8]/[0.06] border border-emerald-200 dark:border-[#22E6B8]/30 rounded-lg space-y-1.5 animate-in fade-in">
+                  <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-emerald-700 dark:text-[#22E6B8]">
                     <span className="flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5" />
                       In-Flight Scrub Preview ({detectedPIIPreview.count} entities detected)
                     </span>
-                    <span className="text-[9.5px] uppercase bg-[#22E6B8]/20 px-1.5 py-0.5 rounded">Pre-Write Scrub</span>
+                    <span className="text-[9.5px] uppercase bg-emerald-200 dark:bg-[#22E6B8]/20 px-1.5 py-0.5 rounded">Pre-Write Scrub</span>
                   </div>
-                  <p className="font-mono text-[11px] text-[#8791A3] bg-[#080A10] p-2 rounded border border-white/[0.06] leading-relaxed truncate">
+                  <p className="font-mono text-[11px] text-slate-700 dark:text-[#8791A3] bg-white dark:bg-[#080A10] p-2 rounded border border-emerald-100 dark:border-white/[0.06] leading-relaxed truncate">
                     {detectedPIIPreview.scrubbed}
                   </p>
                 </div>
@@ -332,7 +331,7 @@ const ClientPortal = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || !title || !description}
-                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg font-mono text-[13px] font-semibold text-[#080A10] bg-[#22E6B8] hover:bg-[#5CF2CE] transition-all shadow-[0_0_24px_-6px_rgba(34,230,184,0.6)] disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg font-mono text-[13px] font-semibold text-white dark:text-[#080A10] bg-emerald-600 hover:bg-emerald-700 dark:bg-[#22E6B8] dark:hover:bg-[#5CF2CE] transition-all shadow-sm dark:shadow-[0_0_24px_-6px_rgba(34,230,184,0.6)] disabled:opacity-50 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>{isSubmitting ? 'Streaming Telemetry...' : 'Submit with X-Ray Telemetry'}</span>
@@ -346,10 +345,10 @@ const ClientPortal = () => {
         <div className="lg:col-span-7 space-y-4">
           
           {/* Filters Bar */}
-          <div className="bg-[#0D1119] p-4 rounded-xl border border-white/[0.08] flex flex-wrap items-center justify-between gap-3 shadow-lg">
+          <div className="bg-white dark:bg-[#0D1119] p-4 rounded-xl border border-slate-200 dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-3 shadow-sm dark:shadow-lg">
             <div className="flex items-center space-x-2">
-              <Layers className="w-4 h-4 text-[#22E6B8]" />
-              <span className="font-display font-bold text-sm text-[#EDF1F7]">
+              <Layers className="w-4 h-4 text-emerald-600 dark:text-[#22E6B8]" />
+              <span className="font-display font-bold text-sm text-slate-900 dark:text-[#EDF1F7]">
                 My Incident Stream ({filteredTickets.length})
               </span>
             </div>
@@ -358,7 +357,7 @@ const ClientPortal = () => {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-2.5 py-1 rounded-lg bg-[#080A10] border border-white/[0.09] text-[#EDF1F7] text-xs focus:ring-1 focus:ring-[#22E6B8]"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#080A10] border border-slate-300 dark:border-white/[0.09] text-slate-800 dark:text-[#EDF1F7] text-xs focus:ring-1 focus:ring-emerald-500 dark:focus:ring-[#22E6B8]"
               >
                 <option value="ALL">All Categories</option>
                 <option value="Network">Network</option>
@@ -371,7 +370,7 @@ const ClientPortal = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-2.5 py-1 rounded-lg bg-[#080A10] border border-white/[0.09] text-[#EDF1F7] text-xs focus:ring-1 focus:ring-[#22E6B8]"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#080A10] border border-slate-300 dark:border-white/[0.09] text-slate-800 dark:text-[#EDF1F7] text-xs focus:ring-1 focus:ring-emerald-500 dark:focus:ring-[#22E6B8]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="Open">Open</option>
@@ -383,43 +382,43 @@ const ClientPortal = () => {
 
           {/* Ticket Cards */}
           {loadingTickets ? (
-            <div className="bg-[#0D1119] border border-white/[0.08] rounded-xl p-12 text-center">
-              <div className="w-8 h-8 border-2 border-[#22E6B8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="font-mono text-xs text-[#8791A3]">Syncing client incident telemetry...</p>
+            <div className="bg-white dark:bg-[#0D1119] border border-slate-200 dark:border-white/[0.08] rounded-xl p-12 text-center">
+              <div className="w-8 h-8 border-2 border-emerald-600 dark:border-[#22E6B8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="font-mono text-xs text-slate-500 dark:text-[#8791A3]">Syncing client incident telemetry...</p>
             </div>
           ) : filteredTickets.length === 0 ? (
-            <div className="bg-[#0D1119] border border-white/[0.08] rounded-xl p-12 text-center">
-              <FileText className="w-8 h-8 text-[#565F70] mx-auto mb-2" />
-              <p className="font-display font-semibold text-sm text-[#EDF1F7]">No incidents recorded</p>
-              <p className="font-mono text-xs text-[#565F70] mt-1">Submit your first issue using the form on the left</p>
+            <div className="bg-white dark:bg-[#0D1119] border border-slate-200 dark:border-white/[0.08] rounded-xl p-12 text-center">
+              <FileText className="w-8 h-8 text-slate-400 dark:text-[#565F70] mx-auto mb-2" />
+              <p className="font-display font-semibold text-sm text-slate-800 dark:text-[#EDF1F7]">No incidents recorded</p>
+              <p className="font-mono text-xs text-slate-500 dark:text-[#565F70] mt-1">Submit your first issue using the form on the left</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filteredTickets.map((ticket) => (
                 <div
                   key={ticket._id}
-                  className="bg-[#0D1119] border border-white/[0.08] hover:border-[#22E6B8]/30 rounded-xl p-4.5 transition-all shadow-lg group space-y-3"
+                  className="bg-white dark:bg-[#0D1119] border border-slate-200 dark:border-white/[0.08] hover:border-emerald-300 dark:hover:border-[#22E6B8]/30 rounded-xl p-4.5 transition-all shadow-xs dark:shadow-lg group space-y-3"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-mono text-[11px] text-[#565F70]">
+                        <span className="font-mono text-[11px] text-slate-400 dark:text-[#565F70]">
                           #{ticket._id.slice(-6).toUpperCase()}
                         </span>
                         <span className={`font-mono text-[10px] font-semibold px-2 py-0.2 rounded border ${
                           ticket.status === 'Resolved'
-                            ? 'bg-[#22E6B8]/15 text-[#22E6B8] border-[#22E6B8]/30'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-[#22E6B8]/15 dark:text-[#22E6B8] dark:border-[#22E6B8]/30'
                             : ticket.status === 'In Progress'
-                            ? 'bg-[#38BDF8]/15 text-[#38BDF8] border-[#38BDF8]/30'
-                            : 'bg-[#FFB454]/15 text-[#FFB454] border-[#FFB454]/30'
+                            ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-[#38BDF8]/15 dark:text-[#38BDF8] dark:border-[#38BDF8]/30'
+                            : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-[#FFB454]/15 dark:text-[#FFB454] dark:border-[#FFB454]/30'
                         }`}>
                           {ticket.status}
                         </span>
-                        <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-white/[0.05] text-[#8791A3] border border-white/[0.06]">
+                        <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-[#8791A3] border border-slate-200 dark:border-white/[0.06]">
                           {ticket.category || 'General'}
                         </span>
                       </div>
-                      <h3 className="font-display font-semibold text-[14.5px] text-[#EDF1F7] group-hover:text-[#22E6B8] transition-colors">
+                      <h3 className="font-display font-semibold text-[14.5px] text-slate-900 dark:text-[#EDF1F7] group-hover:text-emerald-600 dark:group-hover:text-[#22E6B8] transition-colors">
                         {ticket.title}
                       </h3>
                     </div>
@@ -433,26 +432,26 @@ const ClientPortal = () => {
                     </div>
                   </div>
 
-                  <p className="font-mono text-[12px] text-[#8791A3] line-clamp-2 leading-relaxed bg-[#080A10] p-2.5 rounded-lg border border-white/[0.05]">
+                  <p className="font-mono text-[12px] text-slate-600 dark:text-[#8791A3] line-clamp-2 leading-relaxed bg-slate-50 dark:bg-[#080A10] p-2.5 rounded-lg border border-slate-100 dark:border-white/[0.05]">
                     {ticket.sanitizedDescription || ticket.description}
                   </p>
 
-                  {/* Remediation SOP Pill if available */}
+                  {/* Remediation SOP Pill */}
                   {ticket.nlpTriage?.suggestedRemediation && (
-                    <div className="p-2 rounded-lg bg-[#22E6B8]/[0.05] border border-[#22E6B8]/20 flex items-start space-x-2 text-[11.5px] font-mono text-[#22E6B8]">
+                    <div className="p-2 rounded-lg bg-emerald-50 dark:bg-[#22E6B8]/[0.05] border border-emerald-200 dark:border-[#22E6B8]/20 flex items-start space-x-2 text-[11.5px] font-mono text-emerald-700 dark:text-[#22E6B8]">
                       <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                       <span className="line-clamp-1">{ticket.nlpTriage.suggestedRemediation}</span>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] text-[11px] font-mono text-[#565F70]">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.05] text-[11px] font-mono text-slate-400 dark:text-[#565F70]">
                     <div className="flex items-center space-x-1.5">
                       <Clock className="w-3 h-3" />
                       <span>{new Date(ticket.createdAt).toLocaleString()}</span>
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <span className="text-[#22E6B8] font-bold">
+                      <span className="text-emerald-600 dark:text-[#22E6B8] font-bold">
                         NLP Confidence: {Math.round((ticket.nlpTriage?.confidence || 0.85) * 100)}%
                       </span>
                     </div>

@@ -5,11 +5,33 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-main: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --bg-card-subtle: #F1F5F9;
+    --border-color: rgba(226, 232, 240, 0.9);
+    --text-primary: #0F172A;
+    --text-muted: #64748B;
+    --text-subtle: #94A3B8;
+  }
+
+  html.dark {
+    --bg-main: #080A10;
+    --bg-card: #0D1119;
+    --bg-card-subtle: #080A10;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #EDF1F7;
+    --text-muted: #8791A3;
+    --text-subtle: #565F70;
+  }
+
   body {
-    @apply bg-[#080A10] text-[#EDF1F7] antialiased;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
@@ -25,48 +47,30 @@
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
-/* Custom sleek dark scrollbar */
+/* Custom sleek scrollbar for light/dark */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #080A10;
+  background: var(--bg-main);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(34, 230, 184, 0.5);
 }
 
-/* Glassmorphism & Cyber Card Utilities */
-.cyber-card {
-  background: #0D1119;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.cyber-card-hover {
-  transition: all 0.2s ease-in-out;
-}
-
-.cyber-card-hover:hover {
-  border-color: rgba(34, 230, 184, 0.35);
-  background: #111726;
-  transform: translateY(-1px);
-}
-
-.glass-panel {
-  background: rgba(13, 17, 25, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
+/* Pulse animation */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
@@ -74,4 +78,9 @@
 
 .pulse-dot {
   animation: pulse-dot 2.2s ease-in-out infinite;
+}
+
+/* Transitions */
+.theme-transition {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }

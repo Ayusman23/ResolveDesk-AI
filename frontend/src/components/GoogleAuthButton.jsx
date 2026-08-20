@@ -181,7 +181,7 @@ const GoogleAuthButton = ({ role = 'client', text = 'Continue with Google', onSu
         type="button"
         onClick={handleDirectGoogleLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center space-x-2.5 py-2.5 px-4 rounded-lg border border-white/[0.09] bg-[#080A10] hover:bg-white/[0.04] text-[#EDF1F7] text-[13px] font-mono font-medium transition-all cursor-pointer shadow-sm hover:border-[#22E6B8]/30 group disabled:opacity-50"
+        className="w-full flex items-center justify-center space-x-2.5 py-2.5 px-4 rounded-lg border border-slate-300 dark:border-white/[0.09] bg-slate-50 dark:bg-[#080A10] hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-800 dark:text-[#EDF1F7] text-[13px] font-mono font-medium transition-all cursor-pointer shadow-xs hover:border-emerald-300 dark:hover:border-[#22E6B8]/30 group disabled:opacity-50"
       >
         {loading ? (
           <RefreshCw className="w-4 h-4 text-[#22E6B8] animate-spin" />
