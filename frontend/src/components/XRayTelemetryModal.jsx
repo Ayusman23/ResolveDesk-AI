@@ -7,16 +7,14 @@ import {
   Search, 
   Activity, 
   CheckCircle2, 
-  AlertCircle,
-  ExternalLink,
   ChevronRight,
-  FileCode2,
-  Terminal as TerminalIcon
+  Terminal as TerminalIcon,
+  X
 } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
 
 const PIPELINE_STAGES = [
-  { id: 'CONTEXT_INDEXING', label: 'Context Harvesting', icon: Cpu, desc: 'Client OS & telemetry indexing' },
+  { id: 'CONTEXT_INDEXING', label: 'Context Harvesting', icon: Cpu, desc: 'Client OS & device diagnostics' },
   { id: 'PII_REDACTION', label: 'In-Flight PII Scrub', icon: Lock, desc: 'Sanitizing secrets & credentials' },
   { id: 'EMBEDDING_DUPLICATE_CHECK', label: 'Outage Correlation', icon: Search, desc: 'Cosine similarity vector scan' },
   { id: 'NLP_TRIAGE', label: 'NLP Triage Engine', icon: Activity, desc: 'Category & priority scoring' },
@@ -55,7 +53,6 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
       return;
     }
 
-    // Initial log entry
     const startTime = new Date().toLocaleTimeString();
     setLogs([
       {
@@ -66,7 +63,6 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
       },
     ]);
 
-    // High-performance smooth animation timer (advances through stages in ~1.2s total)
     let stepIndex = 0;
     const interval = setInterval(() => {
       if (stepIndex < DEFAULT_LOGS.length) {
@@ -98,7 +94,6 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
       }
     }, 220);
 
-    // Also listen to live server WebSocket events if available
     const handleTelemetryStep = (payload) => {
       const { step, status, message, progress, data, timestamp } = payload;
       if (message) {
@@ -145,7 +140,6 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
     };
   }, [isOpen, socket, onCompleted]);
 
-  // Auto-scroll logs
   useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
@@ -155,43 +149,37 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#080A10]/85 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#22E6B8] selection:text-[#080A10]">
+      <div className="bg-[#0D1119] border border-white/[0.1] w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden text-[#EDF1F7] animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Header with animated radar beam */}
-        <div className="relative px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        {/* Header */}
+        <div className="relative px-6 py-4 bg-[#080A10] border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
-                <Radio className="w-5 h-5 animate-pulse" />
-              </div>
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
+            <div className="w-10 h-10 rounded-xl bg-[#22E6B8]/15 border border-[#22E6B8]/40 flex items-center justify-center text-[#22E6B8] shadow-[0_0_16px_-4px_rgba(34,230,184,0.4)]">
+              <Radio className="w-5 h-5 pulse-dot" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white tracking-wide">
+                <h3 className="font-display text-[16px] font-bold text-[#EDF1F7] tracking-wide">
                   WebSocket "X-Ray" Telemetry Stream
                 </h3>
-                <span className="text-[10px] font-mono uppercase bg-brand-900/60 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded">
-                  Novel Feature 7
+                <span className="font-mono text-[9.5px] uppercase bg-[#22E6B8]/10 text-[#22E6B8] border border-[#22E6B8]/30 px-2 py-0.5 rounded">
+                  Live Topology
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-mono">
+              <p className="font-mono text-[11.5px] text-[#8791A3]">
                 Real-time AI pipeline execution & Zero-Trust credential scrub
               </p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-xs font-mono font-bold text-emerald-400">
+            <span className="font-mono text-xs font-bold text-[#22E6B8]">
               {currentProgress}% COMPLETED
             </span>
-            <div className="w-32 bg-slate-800 h-2 rounded-full mt-1 overflow-hidden border border-slate-700">
+            <div className="w-32 bg-[#080A10] h-2 rounded-full mt-1.5 overflow-hidden border border-white/[0.08]">
               <div
-                className="bg-gradient-to-r from-brand-500 via-indigo-400 to-emerald-400 h-full transition-all duration-300 rounded-full"
+                className="bg-gradient-to-r from-[#22E6B8] via-[#38BDF8] to-[#8B7CFA] h-full transition-all duration-300 rounded-full"
                 style={{ width: `${currentProgress}%` }}
               />
             </div>
@@ -199,7 +187,7 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
         </div>
 
         {/* Pipeline Stage Pills */}
-        <div className="px-6 py-3 bg-slate-850/60 border-b border-slate-800/80 grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="px-6 py-3 bg-[#0A0D14] border-b border-white/[0.06] grid grid-cols-2 sm:grid-cols-5 gap-2">
           {PIPELINE_STAGES.map((stage, idx) => {
             const Icon = stage.icon;
             const isDone = completedSteps.has(stage.id) || (isFinished && idx < 5);
@@ -210,22 +198,22 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
                 key={stage.id}
                 className={`p-2 rounded-lg border transition-all text-left flex items-center space-x-2 ${
                   isDone
-                    ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
+                    ? 'bg-[#22E6B8]/[0.08] border-[#22E6B8]/40 text-[#22E6B8]'
                     : isCurrent
-                    ? 'bg-brand-950/60 border-brand-500/80 text-brand-200 ring-1 ring-brand-500/30'
-                    : 'bg-slate-900/40 border-slate-800 text-slate-500'
+                    ? 'bg-[#38BDF8]/[0.10] border-[#38BDF8]/50 text-[#38BDF8] shadow-[0_0_12px_-3px_rgba(56,189,248,0.4)]'
+                    : 'bg-[#080A10]/60 border-white/[0.05] text-[#565F70]'
                 }`}
               >
                 <div className="shrink-0">
                   {isDone ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 text-[#22E6B8]" />
                   ) : (
-                    <Icon className={`w-4 h-4 ${isCurrent ? 'text-brand-400 animate-spin-slow' : 'text-slate-500'}`} />
+                    <Icon className={`w-4 h-4 ${isCurrent ? 'text-[#38BDF8] pulse-dot' : 'text-[#565F70]'}`} />
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 font-mono">
                   <p className="text-[11px] font-semibold truncate">{stage.label}</p>
-                  <p className="text-[9px] text-slate-400 truncate">{stage.desc}</p>
+                  <p className="text-[9px] text-[#565F70] truncate">{stage.desc}</p>
                 </div>
               </div>
             );
@@ -234,32 +222,32 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
 
         {/* Live Terminal Log Viewer */}
         <div className="p-6 space-y-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs shadow-inner">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-slate-400 text-[11px]">
+          <div className="bg-[#080A10] border border-white/[0.08] rounded-xl p-4 font-mono text-xs shadow-inner">
+            <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-white/[0.06] text-[#8791A3] text-[11px]">
               <div className="flex items-center space-x-2">
-                <TerminalIcon className="w-3.5 h-3.5 text-brand-400" />
-                <span>Zero-Trust Diagnostic Terminal</span>
+                <TerminalIcon className="w-3.5 h-3.5 text-[#22E6B8]" />
+                <span className="text-[#EDF1F7]">Zero-Trust Diagnostic Terminal</span>
               </div>
-              <span className="text-[10px] text-slate-500">Live Ingestion Pipeline</span>
+              <span className="text-[10px] text-[#565F70]">Socket.IO Ingestion Stream</span>
             </div>
 
             <div
               ref={logContainerRef}
-              className="h-44 overflow-y-auto space-y-2 text-slate-300 pr-1 select-text scroll-smooth"
+              className="h-44 overflow-y-auto space-y-2 text-[#EDF1F7] pr-1 select-text scroll-smooth"
             >
               {logs.map((log, index) => (
                 <div key={index} className="flex items-start space-x-2 leading-relaxed">
-                  <span className="text-slate-500 text-[10px] shrink-0">[{log.timestamp}]</span>
-                  <span className={`shrink-0 font-bold px-1 rounded text-[10px] ${
+                  <span className="text-[#565F70] text-[10px] shrink-0">[{log.timestamp}]</span>
+                  <span className={`shrink-0 font-bold px-1.5 py-0.2 rounded text-[10px] ${
                     log.status === 'COMPLETED'
-                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      ? 'bg-[#22E6B8]/15 text-[#22E6B8] border border-[#22E6B8]/30'
                       : log.status === 'TRIGGERED'
-                      ? 'bg-amber-950 text-amber-400 border border-amber-800'
-                      : 'bg-brand-950 text-brand-400 border border-brand-800'
+                      ? 'bg-[#FFB454]/15 text-[#FFB454] border border-[#FFB454]/30'
+                      : 'bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30'
                   }`}>
                     {log.step}
                   </span>
-                  <span className="text-slate-200">{log.message}</span>
+                  <span className="text-[#EDF1F7]">{log.message}</span>
                 </div>
               ))}
             </div>
@@ -267,11 +255,11 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
 
           {/* Sanitized PII & SLA Insight Cards */}
           {sanitizedSnippet && (
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs flex items-start space-x-3">
-              <Lock className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="bg-[#080A10] border border-white/[0.08] rounded-xl p-3 text-xs flex items-start space-x-3">
+              <Lock className="w-4 h-4 text-[#22E6B8] shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-emerald-400">In-Flight PII Redaction Verified:</span>
-                <p className="text-slate-300 font-mono text-[11px] mt-0.5 bg-slate-900 px-2 py-1 rounded border border-slate-800 truncate">
+                <span className="font-mono font-semibold text-[#22E6B8]">In-Flight PII Redaction Verified:</span>
+                <p className="text-[#EDF1F7] font-mono text-[11px] mt-1 bg-[#0D1119] px-2.5 py-1 rounded border border-white/[0.07] truncate">
                   "{sanitizedSnippet}"
                 </p>
               </div>
@@ -279,14 +267,14 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
           )}
 
           {slaResult && (
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs flex items-center justify-between">
+            <div className="bg-[#080A10] border border-white/[0.08] rounded-xl p-3 text-xs flex items-center justify-between font-mono">
               <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-brand-400" />
-                <span className="text-slate-300">
-                  Calculated SLA Breach Risk: <strong className="text-white">{slaResult.score}/100</strong> ({slaResult.level} Risk)
+                <ShieldCheck className="w-4 h-4 text-[#22E6B8]" />
+                <span className="text-[#8791A3]">
+                  Calculated SLA Breach Risk: <strong className="text-[#EDF1F7]">{slaResult.score}%</strong> ({slaResult.level} Risk)
                 </span>
               </div>
-              <span className="text-slate-400 font-mono text-[11px]">
+              <span className="text-[#565F70] text-[11px]">
                 {slaResult.remainingHours}h remaining
               </span>
             </div>
@@ -294,19 +282,19 @@ const XRayTelemetryModal = ({ isOpen, onClose, onCompleted }) => {
         </div>
 
         {/* Footer Action */}
-        <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-xs text-slate-400">
-            <span className={`w-2 h-2 rounded-full ${isFinished ? 'bg-emerald-500' : 'bg-amber-500 animate-ping'}`} />
+        <div className="px-6 py-4 bg-[#080A10] border-t border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center space-x-2 font-mono text-[11.5px] text-[#8791A3]">
+            <span className={`w-2 h-2 rounded-full ${isFinished ? 'bg-[#22E6B8]' : 'bg-[#FFB454] pulse-dot'}`} />
             <span>{isFinished ? 'Zero-Trust Record persisted & ready' : 'Streaming Real-Time Telemetry...'}</span>
           </div>
 
           <button
             onClick={onClose}
             disabled={!isFinished}
-            className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-1.5 ${
+            className={`px-5 py-2 rounded-lg font-mono text-[13px] font-semibold transition-all flex items-center space-x-1.5 ${
               isFinished
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-brand-500/25 cursor-pointer'
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                ? 'bg-[#22E6B8] hover:bg-[#5CF2CE] text-[#080A10] shadow-[0_0_20px_-6px_rgba(34,230,184,0.6)] cursor-pointer'
+                : 'bg-white/[0.05] text-[#565F70] cursor-not-allowed border border-white/[0.08]'
             }`}
           >
             <span>{isFinished ? 'View Created Incident' : 'Processing Telemetry...'}</span>

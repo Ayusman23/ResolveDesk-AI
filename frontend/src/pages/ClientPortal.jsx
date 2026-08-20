@@ -20,9 +20,10 @@ import {
   FileText,
   Lock,
   Layers,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  Terminal,
+  Activity
 } from 'lucide-react';
 
 const ClientPortal = () => {
@@ -43,7 +44,7 @@ const ClientPortal = () => {
 
   const duplicateCheckTimer = useRef(null);
 
-  // Ingest Client Telemetry on mount (Feature 5)
+  // Ingest Client Telemetry on mount
   useEffect(() => {
     const diag = getDeviceDiagnostics();
     setDiagnostics(diag);
@@ -72,7 +73,6 @@ const ClientPortal = () => {
   useEffect(() => {
     if (!socket) return;
     const handleTicketCreated = (newTicket) => {
-      // If client created it, refresh list
       if (newTicket.createdBy?._id === user?._id || newTicket.createdBy === user?._id) {
         fetchTickets();
       }
@@ -90,7 +90,7 @@ const ClientPortal = () => {
     };
   }, [socket, user]);
 
-  // Real-time as-you-type Semantic Duplicate Detection (Feature 3)
+  // Real-time as-you-type Semantic Duplicate Detection
   useEffect(() => {
     if (duplicateCheckTimer.current) {
       clearTimeout(duplicateCheckTimer.current);
@@ -120,7 +120,28 @@ const ClientPortal = () => {
     return () => clearTimeout(duplicateCheckTimer.current);
   }, [title, description]);
 
-  // Submit Ticket with WebSocket X-Ray Telemetry (Feature 7)
+  // Client-side quick PII detector simulation for instant preview
+  const detectedPIIPreview = (() => {
+    if (!description) return null;
+    let scrubbed = description;
+    let count = 0;
+    
+    // Emails
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    const emails = scrubbed.match(emailRegex) || [];
+    count += emails.length;
+    scrubbed = scrubbed.replace(emailRegex, '[REDACTED_EMAIL]');
+
+    // Secrets / Keys / Passwords
+    const secretRegex = /(?:api[_-]?key|secret|token|bearer|password|pwd)[\s:=]+([a-zA-Z0-9_\-\.]{8,})/gi;
+    const secrets = scrubbed.match(secretRegex) || [];
+    count += secrets.length;
+    scrubbed = scrubbed.replace(secretRegex, (m, p1) => m.replace(p1, '[REDACTED_SECRET]'));
+
+    return count > 0 ? { scrubbed, count } : null;
+  })();
+
+  // Submit Ticket with WebSocket X-Ray Telemetry
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title || !description) return;
@@ -138,7 +159,6 @@ const ClientPortal = () => {
 
       const res = await api.post('/tickets', payload);
       if (res.data.success) {
-        // Reset form
         setTitle('');
         setDescription('');
         setDuplicates([]);
@@ -154,105 +174,116 @@ const ClientPortal = () => {
     fetchTickets();
   };
 
-  // Quick sample templates for testing PII redaction and triage
   const fillSampleTicket = (type) => {
     if (type === 'vpn') {
       setTitle('VPN Gateway disconnects every 15 minutes during voice calls');
-      setDescription('Cannot reach London HQ subnet. My email is alice.client@enterprise.corp and my auth bearer token was bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9. Please unlock my ASA port.');
-    } else if (type === 'access') {
-      setTitle('Need AWS Production S3 Read Access for Q3 Accounting Audit');
-      setDescription('Requesting temporary assume-role IAM credential for bucket s3://prod-finance-archive. My AWS key was AKIAIOSFODNN7EXAMPLE and password was SecretP@ssw0rd!2026.');
-    } else if (type === 'hardware') {
-      setTitle('MacBook Pro M3 USB-C Thunderbolt dock monitor flickering pink');
-      setDescription('External 4K Dell display flickers and disconnects whenever charging via CalDigit Thunderbolt dock in 4th floor conference room.');
+      setDescription('My Cisco AnyConnect VPN drops connection during Zoom meetings. Device IP 192.168.1.45, contact alice.work@enterprise.corp or auth token bearer sk-9988223311.');
+    } else if (type === 'secret') {
+      setTitle('Production AWS S3 deployment pipeline failing on upload');
+      setDescription('The CI runner failed with AccessDenied on s3:PutObject. AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE and secret_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY. Please grant permissions.');
+    } else if (type === 'db') {
+      setTitle('PostgreSQL connection pool exhausted under heavy peak load');
+      setDescription('Database latency spiked above 1800ms with error: too many connections for role pg_admin password=SecretDbPass123!.');
     }
   };
 
+  // Filtered tickets
   const filteredTickets = tickets.filter((t) => {
-    if (filterCategory !== 'ALL' && t.category !== filterCategory) return false;
-    if (filterStatus !== 'ALL' && t.status !== filterStatus) return false;
-    return true;
+    const matchCat = filterCategory === 'ALL' || t.category === filterCategory;
+    const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
+    return matchCat && matchStatus;
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto selection:bg-brand-500 selection:text-white">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#080A10] text-[#EDF1F7] py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto selection:bg-[#22E6B8] selection:text-[#080A10]">
       
+      {/* Telemetry Ingestion Modal */}
+      <XRayTelemetryModal
+        isOpen={isTelemetryModalOpen}
+        onClose={() => setIsTelemetryModalOpen(false)}
+        onCompleted={handleTelemetryComplete}
+      />
+
       {/* Header Banner */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-enterprise-md">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0D1119] p-6 rounded-xl border border-white/[0.08] shadow-2xl">
         <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              Enterprise Client Service Desk
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#22E6B8]/15 border border-[#22E6B8]/30 flex items-center justify-center text-[#22E6B8]">
+              <Terminal className="w-4.5 h-4.5" />
+            </div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-[#EDF1F7]">
+              Client Self-Service & Triage Portal
             </h1>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-              Zero-Trust Protected
+            <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#22E6B8]/10 text-[#22E6B8] border border-[#22E6B8]/30">
+              Zero-Trust Client
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Submit IT incidents with in-flight PII redaction, real-time outage detection, and WebSocket telemetry streaming.
+          <p className="font-mono text-[12px] text-[#8791A3] mt-1">
+            Automatic in-flight credential scrubbing, contextual device harvesting, and real-time AI triage
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <button
             onClick={fetchTickets}
-            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#080A10] border border-white/[0.08] text-[12px] font-mono text-[#8791A3] hover:text-[#EDF1F7] hover:border-white/[0.2] transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loadingTickets ? 'animate-spin' : ''}`} />
-            <span>Refresh Queue</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingTickets ? 'animate-spin text-[#22E6B8]' : ''}`} />
+            <span>Sync</span>
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Ticket Submission Form */}
+        {/* Left Column: Ticket Ingestion Form */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-enterprise-md">
+          <div className="bg-[#0D1119] p-6 rounded-xl border border-white/[0.08] shadow-2xl space-y-5">
             
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-              <div className="flex items-center space-x-2">
-                <PlusCircle className="w-5 h-5 text-brand-600" />
-                <h2 className="text-base font-bold text-slate-900">New Service Incident</h2>
-              </div>
-              <span className="text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200">
-                AI Automated Triage
-              </span>
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+              <h2 className="font-display text-[16px] font-semibold text-[#EDF1F7] flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-[#22E6B8]" />
+                Submit Support Incident
+              </h2>
+              <span className="font-mono text-[10px] text-[#565F70]">Real-Time Ingestion</span>
             </div>
 
-            {/* Quick Test Preset Badges */}
-            <div className="mb-4">
-              <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mb-2">
-                <Sparkles className="w-3 h-3 text-amber-500" /> Test Scenarios (Auto-Fills PII & Category):
+            {/* Quick Demo Pre-fills */}
+            <div className="p-3 bg-[#080A10] rounded-lg border border-white/[0.06]">
+              <span className="font-mono text-[10.5px] uppercase font-semibold text-[#8791A3] flex items-center gap-1.5 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#22E6B8]" /> Quick Telemetry Scenarios:
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 font-mono text-[11px]">
                 <button
                   type="button"
                   onClick={() => fillSampleTicket('vpn')}
-                  className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+                  className="px-2.5 py-1 rounded bg-[#22E6B8]/10 text-[#22E6B8] border border-[#22E6B8]/30 hover:bg-[#22E6B8]/20 transition-colors cursor-pointer"
                 >
-                  🌐 VPN + Bearer Token
+                  VPN Flapping + Email
                 </button>
                 <button
                   type="button"
-                  onClick={() => fillSampleTicket('access')}
-                  className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+                  onClick={() => fillSampleTicket('secret')}
+                  className="px-2.5 py-1 rounded bg-[#FF5C6C]/10 text-[#FF5C6C] border border-[#FF5C6C]/30 hover:bg-[#FF5C6C]/20 transition-colors cursor-pointer"
                 >
-                  🔑 AWS Key + Password
+                  AWS Key Scrubbing
                 </button>
                 <button
                   type="button"
-                  onClick={() => fillSampleTicket('hardware')}
-                  className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+                  onClick={() => fillSampleTicket('db')}
+                  className="px-2.5 py-1 rounded bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 hover:bg-[#38BDF8]/20 transition-colors cursor-pointer"
                 >
-                  🖥️ Mac Dock Hardware
+                  DB Password Scrub
                 </button>
               </div>
             </div>
 
+            {/* Duplicate Warning Banner */}
+            <DuplicateWarningBanner duplicates={duplicates} />
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-[#8791A3] mb-1.5">
                   Incident Title
                 </label>
                 <input
@@ -260,70 +291,74 @@ const ClientPortal = () => {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Cannot reach Cisco VPN gateway after firmware patch"
-                  className="block w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50/50 font-medium"
+                  placeholder="e.g. Cisco VPN repeatedly terminates session"
+                  className="w-full px-3 py-2 text-[13px] font-mono border border-white/[0.09] rounded-lg bg-[#080A10] text-[#EDF1F7] placeholder-[#565F70] focus:ring-1 focus:ring-[#22E6B8] focus:border-[#22E6B8] transition-colors"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Detailed Diagnostic Description
-                  </label>
-                  <span className="text-[10px] font-medium text-emerald-600 flex items-center gap-1">
-                    <Lock className="w-3 h-3" /> In-Flight PII Auto-Scrub
-                  </span>
-                </div>
+                <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-[#8791A3] mb-1.5">
+                  Detailed Description & Logs
+                </label>
                 <textarea
-                  rows={5}
                   required
+                  rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe your technical issue. (Feel free to test PII scrubbing by writing passwords or email addresses - they will be scrubbed before database persistence!)"
-                  className="block w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50/50"
+                  placeholder="Describe the incident. In-flight PII scrubber will automatically strip passwords, keys, and emails before database write."
+                  className="w-full px-3 py-2 text-[13px] font-mono border border-white/[0.09] rounded-lg bg-[#080A10] text-[#EDF1F7] placeholder-[#565F70] focus:ring-1 focus:ring-[#22E6B8] focus:border-[#22E6B8] transition-colors"
                 />
               </div>
 
-              {/* Novel Feature 3: Real-Time Duplicate Warning Banner */}
-              <DuplicateWarningBanner
-                duplicates={duplicates}
-                onSelectExisting={(item) => setSelectedTicket(item)}
-              />
+              {/* Real-time In-Flight PII Redactor Live Visualizer */}
+              {detectedPIIPreview && (
+                <div className="p-3 bg-[#22E6B8]/[0.06] border border-[#22E6B8]/30 rounded-lg space-y-1.5 animate-in fade-in">
+                  <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-[#22E6B8]">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5" />
+                      In-Flight Scrub Preview ({detectedPIIPreview.count} entities detected)
+                    </span>
+                    <span className="text-[9.5px] uppercase bg-[#22E6B8]/20 px-1.5 py-0.5 rounded">Pre-Write Scrub</span>
+                  </div>
+                  <p className="font-mono text-[11px] text-[#8791A3] bg-[#080A10] p-2 rounded border border-white/[0.06] leading-relaxed truncate">
+                    {detectedPIIPreview.scrubbed}
+                  </p>
+                </div>
+              )}
 
-              {/* Novel Feature 5: Contextual Indexing Diagnostic Pill */}
+              {/* Harvested Device Context Telemetry */}
               <ContextTelemetryPill diagnostics={diagnostics} />
 
               <button
                 type="submit"
                 disabled={isSubmitting || !title || !description}
-                className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-500/20 disabled:opacity-50 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg font-mono text-[13px] font-semibold text-[#080A10] bg-[#22E6B8] hover:bg-[#5CF2CE] transition-all shadow-[0_0_24px_-6px_rgba(34,230,184,0.6)] disabled:opacity-50 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
-                <span>Submit Incident & Stream X-Ray</span>
+                <span>{isSubmitting ? 'Streaming Telemetry...' : 'Submit with X-Ray Telemetry'}</span>
               </button>
             </form>
 
           </div>
         </div>
 
-        {/* Right Column: Submitted Tickets Track & Inspect */}
+        {/* Right Column: Submitted Incidents Stream */}
         <div className="lg:col-span-7 space-y-4">
           
-          {/* Filter Bar */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-enterprise-md flex flex-wrap items-center justify-between gap-3">
+          {/* Filters Bar */}
+          <div className="bg-[#0D1119] p-4 rounded-xl border border-white/[0.08] flex flex-wrap items-center justify-between gap-3 shadow-lg">
             <div className="flex items-center space-x-2">
-              <Layers className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-bold text-slate-700 uppercase">My Submitted Tickets</span>
-              <span className="text-xs font-mono font-bold px-2 py-0.5 bg-slate-100 rounded-full text-slate-700">
-                {filteredTickets.length}
+              <Layers className="w-4 h-4 text-[#22E6B8]" />
+              <span className="font-display font-bold text-sm text-[#EDF1F7]">
+                My Incident Stream ({filteredTickets.length})
               </span>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 font-mono text-xs">
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg bg-slate-50 font-medium"
+                className="px-2.5 py-1 rounded-lg bg-[#080A10] border border-white/[0.09] text-[#EDF1F7] text-xs focus:ring-1 focus:ring-[#22E6B8]"
               >
                 <option value="ALL">All Categories</option>
                 <option value="Network">Network</option>
@@ -336,7 +371,7 @@ const ClientPortal = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg bg-slate-50 font-medium"
+                className="px-2.5 py-1 rounded-lg bg-[#080A10] border border-white/[0.09] text-[#EDF1F7] text-xs focus:ring-1 focus:ring-[#22E6B8]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="Open">Open</option>
@@ -346,127 +381,90 @@ const ClientPortal = () => {
             </div>
           </div>
 
-          {/* Tickets List */}
+          {/* Ticket Cards */}
           {loadingTickets ? (
-            <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3">
-              <div className="w-8 h-8 border-3 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-xs font-mono text-slate-500">Loading Zero-Trust ticket projections...</p>
+            <div className="bg-[#0D1119] border border-white/[0.08] rounded-xl p-12 text-center">
+              <div className="w-8 h-8 border-2 border-[#22E6B8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="font-mono text-xs text-[#8791A3]">Syncing client incident telemetry...</p>
             </div>
           ) : filteredTickets.length === 0 ? (
-            <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3">
-              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-700">No Incidents Found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Submit a new IT incident using the form on the left to trigger the AI triage pipeline.
-              </p>
+            <div className="bg-[#0D1119] border border-white/[0.08] rounded-xl p-12 text-center">
+              <FileText className="w-8 h-8 text-[#565F70] mx-auto mb-2" />
+              <p className="font-display font-semibold text-sm text-[#EDF1F7]">No incidents recorded</p>
+              <p className="font-mono text-xs text-[#565F70] mt-1">Submit your first issue using the form on the left</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredTickets.map((ticket) => {
-                const isSelected = selectedTicket?._id === ticket._id;
-
-                return (
-                  <div
-                    key={ticket._id}
-                    className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:shadow-enterprise-md transition-all space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-brand-600">
-                            #{ticket._id.slice(-6).toUpperCase()}
-                          </span>
-                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                            ticket.status === 'Resolved'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : ticket.status === 'In Progress'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {ticket.status}
-                          </span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                            {ticket.category}
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                            ticket.priority === 'Critical'
-                              ? 'bg-rose-100 text-rose-700'
-                              : ticket.priority === 'High'
-                              ? 'bg-orange-100 text-orange-700'
-                              : 'bg-slate-100 text-slate-700'
-                          }`}>
-                            {ticket.priority} Priority
-                          </span>
-                        </div>
-
-                        <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                          {ticket.title}
-                        </h3>
+              {filteredTickets.map((ticket) => (
+                <div
+                  key={ticket._id}
+                  className="bg-[#0D1119] border border-white/[0.08] hover:border-[#22E6B8]/30 rounded-xl p-4.5 transition-all shadow-lg group space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-mono text-[11px] text-[#565F70]">
+                          #{ticket._id.slice(-6).toUpperCase()}
+                        </span>
+                        <span className={`font-mono text-[10px] font-semibold px-2 py-0.2 rounded border ${
+                          ticket.status === 'Resolved'
+                            ? 'bg-[#22E6B8]/15 text-[#22E6B8] border-[#22E6B8]/30'
+                            : ticket.status === 'In Progress'
+                            ? 'bg-[#38BDF8]/15 text-[#38BDF8] border-[#38BDF8]/30'
+                            : 'bg-[#FFB454]/15 text-[#FFB454] border-[#FFB454]/30'
+                        }`}>
+                          {ticket.status}
+                        </span>
+                        <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-white/[0.05] text-[#8791A3] border border-white/[0.06]">
+                          {ticket.category || 'General'}
+                        </span>
                       </div>
+                      <h3 className="font-display font-semibold text-[14.5px] text-[#EDF1F7] group-hover:text-[#22E6B8] transition-colors">
+                        {ticket.title}
+                      </h3>
+                    </div>
 
-                      {/* SLA Indicator */}
+                    <div className="shrink-0">
                       <SLABadge
-                        score={ticket.slaRiskScore}
-                        level={ticket.slaRiskLevel}
-                        deadline={ticket.slaDeadline}
-                        status={ticket.status}
-                        isCompact={true}
+                        score={ticket.slaPrediction?.score || 15}
+                        level={ticket.slaPrediction?.level || 'Low'}
+                        isCompact
                       />
                     </div>
-
-                    {/* Sanitized Description */}
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60 text-xs text-slate-700 leading-relaxed font-sans">
-                      <p>{ticket.sanitizedDescription || ticket.description}</p>
-                    </div>
-
-                    {/* AI Remediation Pill if available */}
-                    {ticket.suggestedRemediation && (
-                      <div className="bg-indigo-50/60 border border-indigo-100 p-2.5 rounded-xl text-xs flex items-start space-x-2 text-indigo-900">
-                        <Sparkles className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
-                        <div className="min-w-0 flex-1">
-                          <span className="font-semibold text-brand-700">Automated Triage Recommendation:</span>
-                          <p className="text-[11px] text-slate-700 mt-0.5">{ticket.suggestedRemediation}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* PII Redacted Indicator */}
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-emerald-500" />
-                          <span>Zero-Trust Projection Safe</span>
-                        </span>
-                        {ticket.piiEntitiesFound?.length > 0 && (
-                          <span className="text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                            {ticket.piiEntitiesFound.length} PII Item(s) Scrubbed
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center space-x-1 font-mono text-[10px]">
-                        <Clock className="w-3 h-3" />
-                        <span>{new Date(ticket.createdAt).toLocaleDateString()} {new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                    </div>
-
                   </div>
-                );
-              })}
+
+                  <p className="font-mono text-[12px] text-[#8791A3] line-clamp-2 leading-relaxed bg-[#080A10] p-2.5 rounded-lg border border-white/[0.05]">
+                    {ticket.sanitizedDescription || ticket.description}
+                  </p>
+
+                  {/* Remediation SOP Pill if available */}
+                  {ticket.nlpTriage?.suggestedRemediation && (
+                    <div className="p-2 rounded-lg bg-[#22E6B8]/[0.05] border border-[#22E6B8]/20 flex items-start space-x-2 text-[11.5px] font-mono text-[#22E6B8]">
+                      <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span className="line-clamp-1">{ticket.nlpTriage.suggestedRemediation}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] text-[11px] font-mono text-[#565F70]">
+                    <div className="flex items-center space-x-1.5">
+                      <Clock className="w-3 h-3" />
+                      <span>{new Date(ticket.createdAt).toLocaleString()}</span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[#22E6B8] font-bold">
+                        NLP Confidence: {Math.round((ticket.nlpTriage?.confidence || 0.85) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
         </div>
 
       </div>
-
-      {/* Real-time WebSocket X-Ray Telemetry Modal (Feature 7) */}
-      <XRayTelemetryModal
-        isOpen={isTelemetryModalOpen}
-        onClose={() => setIsTelemetryModalOpen(false)}
-        onCompleted={handleTelemetryComplete}
-      />
-
     </div>
   );
 };

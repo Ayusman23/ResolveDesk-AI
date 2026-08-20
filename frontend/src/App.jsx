@@ -16,7 +16,7 @@ function App() {
     <Router>
       <AuthProvider>
         <SocketProvider>
-          <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+          <div className="min-h-screen bg-[#080A10] text-[#EDF1F7] flex flex-col font-sans antialiased selection:bg-[#22E6B8] selection:text-[#080A10]">
             <Navbar />
             <main className="flex-1">
               <Routes>

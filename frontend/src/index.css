@@ -1,44 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 antialiased;
+    @apply bg-[#080A10] text-[#EDF1F7] antialiased;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    overflow-x: hidden;
   }
 }
 
-/* Custom sleek scrollbar for enterprise interfaces */
+.font-sans {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom sleek dark scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #080A10;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(34, 230, 184, 0.5);
 }
 
-/* Glassmorphism utilities */
+/* Glassmorphism & Cyber Card Utilities */
+.cyber-card {
+  background: #0D1119;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cyber-card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.cyber-card-hover:hover {
+  border-color: rgba(34, 230, 184, 0.35);
+  background: #111726;
+  transform: translateY(-1px);
+}
+
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(13, 17, 25, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.dark-glass-panel {
-  background: rgba(15, 23, 42, 0.90);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.6);
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2.2s ease-in-out infinite;
 }

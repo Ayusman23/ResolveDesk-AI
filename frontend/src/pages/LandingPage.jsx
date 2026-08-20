@@ -189,29 +189,7 @@ const LandingPage = () => {
         @media (prefers-reduced-motion: reduce) { .pulse-dot, .row-in, .drift-a, .drift-b, .beam-travel { animation: none !important; } }
       `}</style>
 
-      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#080A10]/85 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-[#22E6B8]/20 to-[#8B7CFA]/20 border border-[#22E6B8]/30 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-[#22E6B8]" />
-            </div>
-            <span className="font-display font-semibold tracking-tight text-[15px]">DeskFlow<span className="text-[#22E6B8]">.ai</span></span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8 font-mono text-[13px] text-[#8791A3]">
-            <a href="#capabilities" className="hover:text-[#EDF1F7] transition-colors">Product</a>
-            <a href="#architecture" className="hover:text-[#EDF1F7] transition-colors">Architecture</a>
-            <a href="#access" className="hover:text-[#EDF1F7] transition-colors">Live demo</a>
-          </nav>
-          <div className="flex items-center gap-4">
-            <span className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-[#8791A3] px-2.5 py-1 rounded-full border border-white/[0.08]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22E6B8] pulse-dot" />
-              All systems operational
-            </span>
-            <Link to="/login" className="font-mono text-[13px] text-[#8791A3] hover:text-[#EDF1F7] transition-colors">Sign in</Link>
-            <Link to="/register" className="font-mono text-[13px] font-medium bg-[#22E6B8] text-[#080A10] px-3.5 py-1.5 rounded-md hover:bg-[#5CF2CE] transition-colors shadow-[0_0_24px_-8px_rgba(34,230,184,0.6)]">Register</Link>
-          </div>
-        </div>
-      </header>
+
 
       <section className="relative border-b border-white/[0.06] overflow-hidden">
         <div className="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
