@@ -1,331 +1,475 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  Lock, 
-  Cpu, 
-  Search, 
-  Radio, 
-  Activity, 
-  Sparkles, 
-  ArrowRight, 
-  Terminal, 
-  Kanban, 
-  BarChart3, 
-  Layers,
-  CheckCircle,
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import {
+  ShieldCheck,
+  Lock,
+  Cpu,
+  Search,
+  Radio,
+  Activity,
+  Sparkles,
+  ArrowRight,
+  ArrowUpRight,
+  Terminal,
+  Kanban,
+  BarChart3,
   Database,
   Server,
-  Zap
+  ChevronRight,
+  Fingerprint,
+  Gauge,
+  Eye,
+  Zap,
 } from 'lucide-react';
+
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const NOVEL_FEATURES = [
-  {
-    num: '01',
-    title: 'In-Flight PII Redaction',
-    desc: 'Scans and scrubs passwords, API keys, AWS credentials, and emails using spaCy NER before DB persistence.',
-    icon: Lock,
-    badge: 'Zero-Trust Security',
-  },
-  {
-    num: '02',
-    title: 'NLP Triage Engine',
-    desc: 'Auto-classifies incoming incidents into Hardware, Network, Access, Software, Security, and computes priority.',
-    icon: Activity,
-    badge: 'FastAPI NLP',
-  },
-  {
-    num: '03',
-    title: 'Semantic Duplicate Detection',
-    desc: 'Computes cosine similarity on incoming ticket embeddings to warn users of existing outages as they type.',
-    icon: Search,
-    badge: 'Vector Cosine',
-  },
-  {
-    num: '04',
-    title: 'Role-Enforced Vector Security',
-    desc: 'Injects JWT role into DB projections to physically block clients from seeing developer-level diagnostic metadata.',
-    icon: ShieldCheck,
-    badge: 'Data Isolation',
-  },
-  {
-    num: '05',
-    title: 'Contextual Indexing',
-    desc: 'Automatically prepends client device OS, browser, resolution, and network diagnostics into the incident context.',
-    icon: Cpu,
-    badge: 'Client Telemetry',
-  },
-  {
-    num: '06',
-    title: 'Agentic Fallback',
-    desc: 'When AI confidence is < 0.65, triggers automated runbook retrieval and synthesizes technical remediation steps.',
-    icon: Sparkles,
-    badge: 'Autonomous Runbooks',
-  },
-  {
-    num: '07',
-    title: 'WebSocket "X-Ray" Telemetry',
-    desc: 'Streams internal AI triage stages in real-time to the frontend over Socket.IO during ticket ingestion.',
-    icon: Radio,
-    badge: 'Real-Time Pipeline',
-  },
-  {
-    num: '08',
-    title: 'SLA Breach Predictor',
-    desc: 'Dynamic mathematical model forecasting breach probabilities based on priority, queue backlog, and dev capacity.',
-    icon: BarChart3,
-    badge: 'Predictive Math',
-  },
+const FEATURES = [
+  { category: 'Security & Isolation', title: 'In-flight PII redaction', desc: 'Scans and scrubs passwords, API keys, AWS credentials, and email addresses using spaCy NER before anything touches the database.', icon: Lock },
+  { category: 'Security & Isolation', title: 'Role-enforced vector security', desc: 'JWT role claims are injected directly into DB projections, physically blocking clients from ever seeing developer-level diagnostics.', icon: ShieldCheck },
+  { category: 'Intelligence', title: 'NLP triage engine', desc: 'Auto-classifies incoming incidents into Hardware, Network, Access, Software, or Security, and computes a priority score.', icon: Activity },
+  { category: 'Intelligence', title: 'Semantic duplicate detection', desc: 'Computes cosine similarity across incoming ticket embeddings to surface existing outages while the user is still typing.', icon: Search },
+  { category: 'Intelligence', title: 'Agentic fallback', desc: 'When model confidence drops below 0.65, the system triggers runbook retrieval and synthesizes remediation steps automatically.', icon: Sparkles },
+  { category: 'Intelligence', title: 'SLA breach predictor', desc: 'A live forecasting model estimates breach probability from ticket priority, queue backlog, and current developer capacity.', icon: BarChart3 },
+  { category: 'Real-time systems', title: 'Contextual indexing', desc: 'Device OS, browser, resolution, and network diagnostics are captured and prepended to every incident automatically.', icon: Cpu },
+  { category: 'Real-time systems', title: 'WebSocket X-Ray telemetry', desc: 'Streams every internal triage stage to the client in real time over Socket.IO as a ticket moves through the pipeline.', icon: Radio },
 ];
 
-const LandingPage = () => {
-  const { user, quickDemoLogin } = useAuth();
-  const navigate = useNavigate();
+const PIPELINE = [
+  { stage: 'Client ingest', detail: 'Device and network context is harvested at the point of submission.', icon: Terminal, elapsed: '+0ms' },
+  { stage: 'PII redaction', detail: 'Regex and spaCy passes scrub sensitive fields before persistence.', icon: Lock, elapsed: '+40ms' },
+  { stage: 'Outage correlation', detail: 'Cosine similarity check against open tickets and known incidents.', icon: Search, elapsed: '+95ms' },
+  { stage: 'Confidence evaluation', detail: 'Below 0.65, the agentic fallback pulls a runbook and drafts steps.', icon: Sparkles, elapsed: '+140ms' },
+  { stage: 'Zero-trust projection', detail: 'Role-scoped payload is written and pushed to Kanban and analytics.', icon: ShieldCheck, elapsed: '+180ms' },
+];
 
-  const handleDemoLaunch = async (role, path) => {
-    await quickDemoLogin(role);
-    navigate(path);
-  };
+const ROLES = [
+  { key: 'client', label: 'Client portal', detail: 'Submit tickets, watch redaction and triage happen live', icon: Terminal, path: '/client' },
+  { key: 'developer', label: 'Developer kanban', detail: 'Full triage depth, runbooks, and internal notes', icon: Kanban, path: '/developer' },
+  { key: 'manager', label: 'Manager analytics', detail: 'SLA risk, queue health, and model confidence over time', icon: BarChart3, path: '/manager' },
+];
+
+const CATEGORIES = ['Security & Isolation', 'Intelligence', 'Real-time systems'];
+
+const TRUST_BADGES = [
+  { icon: Fingerprint, label: 'PII scrubbed pre-write' },
+  { icon: ShieldCheck, label: 'Role-scoped by JWT claim' },
+  { icon: Eye, label: 'Every stage observable' },
+  { icon: Lock, label: 'No plaintext secrets stored' },
+];
+
+const STATS = [
+  { value: 180, suffix: 'ms', label: 'ingest → routed', decimals: 0 },
+  { value: 99.9, suffix: '%', label: 'target uptime', decimals: 1 },
+  { value: 0, suffix: '', label: 'plaintext PII fields stored', decimals: 0 },
+  { value: 8, suffix: '', label: 'independent triage systems', decimals: 0 },
+];
+
+const TECH_STACK = ['Node.js', 'Express', 'Socket.IO', 'FastAPI', 'spaCy', 'MongoDB', 'JWT', 'React'];
+
+const LEDGER_SCRIPT = [
+  { tag: 'received', body: 'TCK-4471 · redacted 3 fields', tone: 'mid' },
+  { tag: 'classified', body: 'TCK-4471 → Network · P2', tone: 'accent' },
+  { tag: 'correlate', body: 'TCK-4471 · 0.82 match on OUT-1183', tone: 'warning' },
+  { tag: 'confidence', body: 'TCK-4471 · 0.91 — no fallback needed', tone: 'accent' },
+  { tag: 'routed', body: 'TCK-4471 → Developer queue', tone: 'mid' },
+  { tag: 'received', body: 'TCK-4472 · redacted 1 field', tone: 'mid' },
+  { tag: 'classified', body: 'TCK-4472 → Access · P3', tone: 'accent' },
+  { tag: 'sla', body: 'TCK-4468 · breach risk 74% in 22m', tone: 'critical' },
+  { tag: 'correlate', body: 'TCK-4472 · no match found', tone: 'mid' },
+  { tag: 'routed', body: 'TCK-4472 → Developer queue', tone: 'mid' },
+];
+
+function useLedger(intervalMs = 1700) {
+  const [rows, setRows] = useState(() => LEDGER_SCRIPT.slice(0, 5).map((r, i) => ({ ...r, id: i, t: tsOffset(i) })));
+  const idxRef = useRef(5);
+  const idRef = useRef(5);
+  useEffect(() => {
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+    const id = setInterval(() => {
+      const next = LEDGER_SCRIPT[idxRef.current % LEDGER_SCRIPT.length];
+      idxRef.current += 1;
+      const row = { ...next, id: idRef.current, t: nowTs() };
+      idRef.current += 1;
+      setRows((prev) => [...prev.slice(1), row]);
+    }, intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return rows;
+}
+function nowTs() { return new Date().toTimeString().slice(0, 8); }
+function tsOffset(stepsAgo) { return new Date(Date.now() - (5 - stepsAgo) * 1700).toTimeString().slice(0, 8); }
+
+const TONE_DOT = { mid: 'bg-[#6B7386]', accent: 'bg-[#22E6B8]', warning: 'bg-[#FFB454]', critical: 'bg-[#FF5C6C]' };
+
+function useInView(options = { threshold: 0.2 }) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) { setInView(true); return; }
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setInView(true); observer.disconnect(); }
+    }, options);
+    observer.observe(node);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return [ref, inView];
+}
+
+function Reveal({ children, delay = 0, className = '' }) {
+  const [ref, inView] = useInView();
+  return (
+    <div ref={ref} className={className} style={{
+      transition: `opacity 0.7s ease ${delay}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+      opacity: inView ? 1 : 0,
+      transform: inView ? 'translateY(0)' : 'translateY(18px)',
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function CountUp({ target, decimals = 0, duration = 1400, suffix = '' }) {
+  const [ref, inView] = useInView({ threshold: 0.4 });
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) { setValue(target); return; }
+    let start = null;
+    const step = (ts) => {
+      if (start === null) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(target * eased);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    const raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, target, duration]);
+  return <span ref={ref}>{value.toFixed(decimals)}{suffix}</span>;
+}
+
+const LandingPage = () => {
+  const navigate = useNavigate();
+  const { quickDemoLogin } = useAuth();
+  const ledger = useLedger();
+  const handleDemoLaunch = useCallback(async (role) => {
+    const res = await quickDemoLogin(role);
+    if (res?.success) {
+      navigate(role === 'manager' ? '/manager' : role === 'developer' ? '/developer' : '/client');
+    }
+  }, [quickDemoLogin, navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-brand-500 selection:text-white">
-      
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 border-b border-slate-200">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),rgba(255,255,255,0))]"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          
-          {/* Top Pill */}
-          <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200/80 text-brand-700 text-xs font-semibold mb-6 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <span className="flex h-2 w-2 rounded-full bg-brand-600 animate-pulse" />
-            <span>Enterprise-Grade Zero-Trust ITSM Platform</span>
-            <span className="text-slate-300">•</span>
-            <span className="font-mono text-brand-800">React + Node.js + FastAPI</span>
-          </div>
+    <div className="min-h-screen bg-[#080A10] text-[#EDF1F7] font-sans antialiased selection:bg-[#22E6B8] selection:text-[#080A10]">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        .font-sans { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
+        .font-display { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; }
+        a, button { outline-offset: 3px; }
+        a:focus-visible, button:focus-visible { outline: 2px solid #22E6B8; border-radius: 4px; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .pulse-dot { animation: pulse-dot 2.2s ease-in-out infinite; }
+        @keyframes row-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .row-in { animation: row-in 0.35s ease-out; }
+        @keyframes drift-a { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4%, 6%) scale(1.08); } }
+        @keyframes drift-b { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-5%, -4%) scale(1.1); } }
+        .drift-a { animation: drift-a 16s ease-in-out infinite; }
+        .drift-b { animation: drift-b 20s ease-in-out infinite; }
+        @keyframes beam-travel { 0% { transform: translateY(-100%); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(600%); opacity: 0; } }
+        .beam-travel { animation: beam-travel 3.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .pulse-dot, .row-in, .drift-a, .drift-b, .beam-travel { animation: none !important; } }
+      `}</style>
 
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 max-w-4xl mx-auto leading-tight sm:leading-none">
-            Next-Gen Autonomous IT Service Desk Powered by <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-violet-600">Zero-Trust AI</span>
-          </h1>
-
-          <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
-            DeskFlow-AI integrates real-time NLP triage, in-flight PII redaction, semantic outage correlation, and WebSocket telemetry into a unified IT service management suite.
-          </p>
-
-          {/* Quick Demo Access Bar */}
-          <div className="mt-10 max-w-3xl mx-auto p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-enterprise-md">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center justify-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" /> One-Click Role Simulator (Instant Login)
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                onClick={() => handleDemoLaunch('client', '/client')}
-                className="group p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 text-left transition-all hover:scale-[1.02] shadow-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Terminal className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-bold text-slate-900">Client Portal</span>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-emerald-600 group-hover:translate-x-1 transition-transform" />
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">Submit tickets with PII scrub & live X-Ray</p>
-              </button>
-
-              <button
-                onClick={() => handleDemoLaunch('developer', '/developer')}
-                className="group p-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-left transition-all hover:scale-[1.02] shadow-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Kanban className="w-4 h-4 text-blue-600" />
-                    <span className="text-xs font-bold text-slate-900">Dev Kanban</span>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-blue-600 group-hover:translate-x-1 transition-transform" />
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">Deep-dive triage, runbooks & notes</p>
-              </button>
-
-              <button
-                onClick={() => handleDemoLaunch('manager', '/manager')}
-                className="group p-3 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-50 text-left transition-all hover:scale-[1.02] shadow-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <BarChart3 className="w-4 h-4 text-purple-600" />
-                    <span className="text-xs font-bold text-slate-900">Manager Analytics</span>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-purple-600 group-hover:translate-x-1 transition-transform" />
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">Recharts SLA risk & AI confidence</p>
-              </button>
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#080A10]/85 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-[#22E6B8]/20 to-[#8B7CFA]/20 border border-[#22E6B8]/30 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-[#22E6B8]" />
             </div>
+            <span className="font-display font-semibold tracking-tight text-[15px]">DeskFlow<span className="text-[#22E6B8]">.ai</span></span>
           </div>
+          <nav className="hidden md:flex items-center gap-8 font-mono text-[13px] text-[#8791A3]">
+            <a href="#capabilities" className="hover:text-[#EDF1F7] transition-colors">Product</a>
+            <a href="#architecture" className="hover:text-[#EDF1F7] transition-colors">Architecture</a>
+            <a href="#access" className="hover:text-[#EDF1F7] transition-colors">Live demo</a>
+          </nav>
+          <div className="flex items-center gap-4">
+            <span className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-[#8791A3] px-2.5 py-1 rounded-full border border-white/[0.08]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22E6B8] pulse-dot" />
+              All systems operational
+            </span>
+            <Link to="/login" className="font-mono text-[13px] text-[#8791A3] hover:text-[#EDF1F7] transition-colors">Sign in</Link>
+            <Link to="/register" className="font-mono text-[13px] font-medium bg-[#22E6B8] text-[#080A10] px-3.5 py-1.5 rounded-md hover:bg-[#5CF2CE] transition-colors shadow-[0_0_24px_-8px_rgba(34,230,184,0.6)]">Register</Link>
+          </div>
+        </div>
+      </header>
 
+      <section className="relative border-b border-white/[0.06] overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
+          <div className="drift-a absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-[#22E6B8]/[0.10] blur-[110px]" />
+          <div className="drift-b absolute top-10 right-0 w-[460px] h-[460px] rounded-full bg-[#8B7CFA]/[0.10] blur-[120px]" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-2 gap-16 items-start">
+          <Reveal>
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-[#22E6B8] mb-6">
+              <span className="w-4 h-px bg-[#22E6B8]" />
+              Zero-trust ITSM
+            </div>
+            <h1 className="font-display text-[2.75rem] sm:text-[3.5rem] font-bold tracking-tight leading-[1.05] text-[#EDF1F7]">
+              The service desk<br />that reads, redacts,<br />and routes itself.
+            </h1>
+            <p className="mt-6 text-[16px] leading-relaxed text-[#8791A3] max-w-md">
+              DeskFlow-AI pairs a Node.js control plane with a FastAPI inference layer to triage, de-duplicate, and route incidents in real time — stripping sensitive data before it ever reaches a document.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <a href="#access" className="inline-flex items-center gap-2 bg-[#EDF1F7] text-[#080A10] font-semibold text-[14px] px-5 py-3 rounded-md hover:bg-white transition-colors">
+                Launch a live instance <ArrowRight className="w-4 h-4" />
+              </a>
+              <a href="#architecture" className="inline-flex items-center gap-2 font-mono text-[13px] text-[#8791A3] hover:text-[#EDF1F7] transition-colors px-1">
+                View the pipeline <ChevronRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+            <div className="mt-12 flex flex-wrap gap-x-6 gap-y-3">
+              {TRUST_BADGES.map((badge) => {
+                const Icon = badge.icon;
+                return (
+                  <div key={badge.label} className="flex items-center gap-2 text-[#8791A3]">
+                    <Icon className="w-3.5 h-3.5 text-[#22E6B8] shrink-0" />
+                    <span className="font-mono text-[11.5px]">{badge.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <div className="relative rounded-xl border border-white/[0.08] bg-[#0D1119]/90 overflow-hidden shadow-[0_0_60px_-20px_rgba(34,230,184,0.15)]">
+              <div className="pointer-events-none absolute left-0 right-0 top-0 h-px overflow-hidden" aria-hidden="true">
+                <div className="beam-travel h-24 w-full bg-gradient-to-b from-[#22E6B8]/50 via-[#22E6B8]/10 to-transparent" />
+              </div>
+              <div className="relative flex items-center justify-between px-4 py-3 border-b border-white/[0.08] font-mono text-[11px] text-[#8791A3]">
+                <span className="uppercase tracking-[0.1em]">Ingestion ledger</span>
+                <span className="flex items-center gap-1.5 text-[#22E6B8]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#22E6B8] pulse-dot" /> live
+                </span>
+              </div>
+              <div className="relative px-4 py-3 font-mono text-[12.5px] leading-[1.9]">
+                {ledger.map((row) => (
+                  <div key={row.id} className="row-in flex items-baseline gap-3 border-b border-white/[0.05] last:border-0 py-1.5">
+                    <span className="text-[#565F70] shrink-0">{row.t}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${TONE_DOT[row.tone]}`} />
+                    <span className="text-[#8791A3] shrink-0 w-[76px]">{row.tag}</span>
+                    <span className="text-[#EDF1F7] truncate">{row.body}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="relative px-4 py-3 border-t border-white/[0.08] font-mono text-[11px] text-[#565F70] flex items-center justify-between">
+                <span>Socket.IO · ws://ingest/x-ray</span>
+                <span className="text-[#22E6B8]">200 OK</span>
+              </div>
+            </div>
+            <div className="mt-6 grid grid-cols-3 gap-4 font-mono">
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-3">
+                <div className="text-[18px] font-semibold text-[#EDF1F7]">180ms</div>
+                <div className="text-[10.5px] text-[#565F70] mt-1">ingest → routed</div>
+              </div>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-3">
+                <div className="text-[18px] font-semibold text-[#EDF1F7]">0.65</div>
+                <div className="text-[10.5px] text-[#565F70] mt-1">fallback threshold</div>
+              </div>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-3">
+                <div className="text-[18px] font-semibold text-[#EDF1F7]">3</div>
+                <div className="text-[10.5px] text-[#565F70] mt-1">isolated services</div>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Novel Features Grid */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
-              Core Innovations
-            </span>
-            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-3">
-              The 8 Novel Enterprise Features
-            </h2>
-            <p className="text-sm text-slate-600 mt-2">
-              Engineered from the ground up for mission-critical enterprise infrastructure and SOC2/Zero-Trust compliance.
+      <section className="border-b border-white/[0.06] bg-[#0A0D14]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 grid md:grid-cols-2 gap-10">
+          <Reveal>
+            <div className="flex items-center gap-2 mb-4">
+              <Gauge className="w-4 h-4 text-[#FF5C6C]" />
+              <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#8791A3]">The problem</h3>
+            </div>
+            <p className="text-[15px] leading-relaxed text-[#8791A3] max-w-md">
+              Service desks route tickets by hand, copy sensitive details into plaintext notes, and let the same outage get reported ten times before anyone notices the pattern.
             </p>
-          </div>
+          </Reveal>
+          <Reveal delay={100}>
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="w-4 h-4 text-[#22E6B8]" />
+              <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#8791A3]">The fix</h3>
+            </div>
+            <p className="text-[15px] leading-relaxed text-[#8791A3] max-w-md">
+              DeskFlow-AI redacts, classifies, and correlates every ticket the moment it lands — so developers see a clean, prioritized queue and clients never have to wonder where their data went.
+            </p>
+          </Reveal>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {NOVEL_FEATURES.map((feat) => {
-              const Icon = feat.icon;
+      <section className="border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-14 grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((stat, i) => (
+            <Reveal key={stat.label} delay={i * 80}>
+              <div className="font-display text-[28px] sm:text-[32px] font-bold text-[#EDF1F7]">
+                <CountUp target={stat.value} decimals={stat.decimals} suffix={stat.suffix} />
+              </div>
+              <div className="font-mono text-[11.5px] text-[#565F70] mt-2">{stat.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section id="access" className="border-b border-white/[0.06] bg-[#080A10]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-14">
+          <Reveal>
+            <div className="flex items-baseline justify-between mb-6 flex-wrap gap-2">
+              <h2 className="font-mono text-[12px] uppercase tracking-[0.14em] text-[#565F70]">Simulate access · instant login</h2>
+              <span className="font-mono text-[11px] text-[#565F70]">No credentials required for this environment</span>
+            </div>
+          </Reveal>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {ROLES.map((role, i) => {
+              const Icon = role.icon;
               return (
-                <div
-                  key={feat.num}
-                  className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-6 hover:shadow-enterprise-md hover:border-brand-300 transition-all group flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors shadow-xs">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="font-mono text-xs font-bold text-slate-400">
-                        {feat.num}
-                      </span>
+                <Reveal key={role.key} delay={i * 90}>
+                  <button onClick={() => handleDemoLaunch(role.key)} className="group w-full text-left bg-[#0D1119] hover:bg-[#111726] border border-white/[0.07] hover:border-[#22E6B8]/30 rounded-lg p-6 transition-all hover:-translate-y-0.5">
+                    <div className="flex items-center justify-between mb-5">
+                      <Icon className="w-4 h-4 text-[#22E6B8]" />
+                      <ArrowUpRight className="w-3.5 h-3.5 text-[#565F70] group-hover:text-[#22E6B8] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                     </div>
-
-                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200 mb-2">
-                      {feat.badge}
-                    </span>
-
-                    <h3 className="text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
-                      {feat.title}
-                    </h3>
-
-                    <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                      {feat.desc}
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center text-[11px] font-semibold text-brand-600">
-                    <span>Engineered Zero-Trust</span>
-                    <CheckCircle className="w-3.5 h-3.5 ml-1 text-emerald-500" />
-                  </div>
-                </div>
+                    <div className="font-display font-semibold text-[14.5px] text-[#EDF1F7]">{role.label}</div>
+                    <p className="font-mono text-[12px] text-[#565F70] mt-1.5 leading-relaxed">{role.detail}</p>
+                  </button>
+                </Reveal>
               );
             })}
           </div>
-
         </div>
       </section>
 
-      {/* Monorepo Architecture Section */}
-      <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-400 bg-brand-950 px-3 py-1 rounded-full border border-brand-800">
-                Monorepo Microservices Blueprint
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">
-                Distributed High-Throughput Pipeline
-              </h2>
-              <p className="text-sm text-slate-400 mt-3 leading-relaxed">
-                DeskFlow-AI partitions workloads across specialized runtimes: Node.js handles real-time WebSocket orchestration and Zero-Trust database projections, while Python FastAPI executes vectorized NLP pipelines and PII scrubbing.
-              </p>
-
-              <div className="mt-8 space-y-4 font-mono text-xs">
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start space-x-3">
-                  <Server className="w-5 h-5 text-brand-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white">Node.js Express + Socket.IO (Port 5000)</strong>
-                    <p className="text-slate-400 text-[11px] mt-0.5">
-                      JWT authentication, Role-Enforced Vector Security, and SLA breach predictor.
-                    </p>
-                  </div>
+      <section id="capabilities" className="border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
+          <Reveal>
+            <div className="max-w-xl mb-14">
+              <h2 className="font-mono text-[12px] uppercase tracking-[0.14em] text-[#22E6B8] mb-3">Capabilities</h2>
+              <p className="font-display text-[26px] sm:text-[30px] font-bold tracking-tight leading-tight text-[#EDF1F7]">Eight systems, each with one job, none of them decorative.</p>
+            </div>
+          </Reveal>
+          {CATEGORIES.map((cat) => (
+            <div key={cat} className="mb-12 last:mb-0">
+              <Reveal>
+                <div className="flex items-center gap-3 mb-5">
+                  <h3 className="font-mono text-[12px] text-[#8791A3]">{cat}</h3>
+                  <span className="flex-1 h-px bg-white/[0.07]" />
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start space-x-3">
-                  <Cpu className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white">Python FastAPI AI Engine (Port 8000)</strong>
-                    <p className="text-slate-400 text-[11px] mt-0.5">
-                      In-flight PII redaction, TF-IDF cosine similarity, and agentic runbook fallback.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start space-x-3">
-                  <Database className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white">MongoDB Mongoose Cluster</strong>
-                    <p className="text-slate-400 text-[11px] mt-0.5">
-                      Compound indexed storage with dual raw/sanitized payload isolation.
-                    </p>
-                  </div>
-                </div>
+              </Reveal>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-5">
+                {FEATURES.filter((f) => f.category === cat).map((feat, i) => {
+                  const Icon = feat.icon;
+                  return (
+                    <Reveal key={feat.title} delay={i * 70}>
+                      <div className="group rounded-lg border border-white/[0.07] bg-[#0D1119] p-5 hover:border-[#22E6B8]/35 hover:bg-[#111726] transition-colors flex gap-4 h-full">
+                        <div className="w-8 h-8 shrink-0 rounded-md bg-white/[0.03] border border-white/[0.07] flex items-center justify-center group-hover:border-[#22E6B8]/40 group-hover:bg-[#22E6B8]/[0.08] transition-colors">
+                          <Icon className="w-4 h-4 text-[#22E6B8]" />
+                        </div>
+                        <div>
+                          <h4 className="text-[14.5px] font-semibold text-[#EDF1F7]">{feat.title}</h4>
+                          <p className="text-[13px] text-[#8791A3] mt-1.5 leading-relaxed">{feat.desc}</p>
+                        </div>
+                      </div>
+                    </Reveal>
+                  );
+                })}
               </div>
             </div>
-
-            {/* Architecture Flow Visualizer */}
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-2xl font-mono text-xs text-slate-300">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800 text-slate-400">
-                <span>ITSM Ingestion Stream Topology</span>
-                <span className="text-[10px] text-emerald-400 font-bold">200 OK</span>
-              </div>
-
-              <div className="space-y-3">
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <span className="text-brand-400">1. Client Ingest</span>
-                  <span className="text-slate-400">Device Context Harvested</span>
-                </div>
-                <div className="text-center text-slate-600">↓ (Socket.IO Handshake)</div>
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <span className="text-indigo-400">2. PII Redaction Microservice</span>
-                  <span className="text-slate-400">Regex + spaCy Scrub</span>
-                </div>
-                <div className="text-center text-slate-600">↓ (Vector Embeddings)</div>
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <span className="text-emerald-400">3. Outage Correlation</span>
-                  <span className="text-slate-400">Cosine Similarity Warning</span>
-                </div>
-                <div className="text-center text-slate-600">↓ (Confidence Evaluation)</div>
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <span className="text-amber-400">4. Agentic Fallback & SLA</span>
-                  <span className="text-slate-400">&lt; 0.65 Trigger Runbooks</span>
-                </div>
-                <div className="text-center text-slate-600">↓ (Zero-Trust Projection)</div>
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <span className="text-purple-400">5. Kanban & Analytics Push</span>
-                  <span className="text-slate-400">Real-time Telemetry Complete</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
+          ))}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2 font-bold text-slate-800">
-            <ShieldCheck className="w-4 h-4 text-brand-600" />
-            <span>DeskFlow-AI Enterprise Zero-Trust ITSM</span>
+      <section id="architecture" className="border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 grid lg:grid-cols-[1fr,1.2fr] gap-16">
+          <Reveal>
+            <h2 className="font-mono text-[12px] uppercase tracking-[0.14em] text-[#22E6B8] mb-3">Architecture</h2>
+            <p className="font-display text-[26px] sm:text-[30px] font-bold tracking-tight leading-tight text-[#EDF1F7] mb-5">Two runtimes, split by what they're good at.</p>
+            <p className="text-[14.5px] text-[#8791A3] leading-relaxed mb-8 max-w-md">Node handles everything stateful and real-time — auth, sockets, and zero-trust projections. Python handles everything numerical — embeddings, redaction, and the fallback model.</p>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-white/[0.07] bg-[#0D1119]">
+                <Server className="w-4 h-4 text-[#22E6B8] shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-mono text-[12.5px] text-[#EDF1F7]">node · express + socket.io <span className="text-[#565F70]">:5000</span></div>
+                  <p className="text-[12px] text-[#8791A3] mt-1">Auth, role-scoped projections, SLA prediction.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-white/[0.07] bg-[#0D1119]">
+                <Cpu className="w-4 h-4 text-[#8B7CFA] shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-mono text-[12.5px] text-[#EDF1F7]">python · fastapi <span className="text-[#565F70]">:8000</span></div>
+                  <p className="text-[12px] text-[#8791A3] mt-1">PII redaction, cosine similarity, runbook synthesis.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-white/[0.07] bg-[#0D1119]">
+                <Database className="w-4 h-4 text-[#FFB454] shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-mono text-[12.5px] text-[#EDF1F7]">mongodb · mongoose</div>
+                  <p className="text-[12px] text-[#8791A3] mt-1">Compound-indexed storage, dual raw/sanitized payloads.</p>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+          <div className="relative pl-8">
+            <div className="absolute left-[13px] top-2 bottom-2 w-px bg-white/[0.08]" />
+            <div className="space-y-8">
+              {PIPELINE.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <Reveal key={step.stage} delay={i * 90}>
+                    <div className="relative">
+                      <div className="absolute -left-8 top-0.5 w-[26px] h-[26px] rounded-full bg-[#0D1119] border border-[#22E6B8]/40 flex items-center justify-center">
+                        <Icon className="w-3 h-3 text-[#22E6B8]" />
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <h4 className="text-[14.5px] font-semibold text-[#EDF1F7]"><span className="font-mono text-[#565F70] mr-2">0{i + 1}</span>{step.stage}</h4>
+                        <span className="font-mono text-[11px] text-[#565F70]">{step.elapsed}</span>
+                      </div>
+                      <p className="text-[13px] text-[#8791A3] mt-1.5 leading-relaxed max-w-md">{step.detail}</p>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
-          <p>© 2026 DeskFlow-AI Engineering. All enterprise rights reserved.</p>
+        </div>
+      </section>
+
+      <footer className="py-10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2 text-[13px] text-[#8791A3]">
+              <ShieldCheck className="w-4 h-4 text-[#22E6B8]" />
+              <span className="font-display font-semibold text-[#EDF1F7]">DeskFlow.ai</span>
+              <span className="text-[#565F70]">— zero-trust IT service management</span>
+            </div>
+            <p className="font-mono text-[11.5px] text-[#565F70]">© 2026 DeskFlow-AI Engineering</p>
+          </div>
+          <div className="mt-6 pt-6 border-t border-white/[0.06] flex flex-wrap gap-2">
+            {TECH_STACK.map((tech) => (
+              <span key={tech} className="font-mono text-[10.5px] text-[#8791A3] border border-white/[0.07] rounded-full px-2.5 py-1">{tech}</span>
+            ))}
+          </div>
         </div>
       </footer>
-
     </div>
   );
 };
