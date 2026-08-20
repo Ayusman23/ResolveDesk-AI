@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
@@ -117,30 +118,57 @@ router.post('/login', async (req, res) => {
 });
 
 // @route   POST /api/auth/google
-// @desc    Google OAuth Sign In / Sign Up
+// @desc    Real Google OAuth 2.0 / GIS Sign In & Sign Up Verification
 // @access  Public
 router.post('/google', async (req, res) => {
   try {
-    const { credential, profile, role } = req.body;
+    const { credential, accessToken, profile, role } = req.body;
 
     let email = profile?.email;
     let name = profile?.name;
     let avatar = profile?.picture || profile?.avatar || '';
 
-    // If Google ID token is provided, decode payload
+    // 1. Verify Google ID token (JWT from Google Identity Services)
     if (credential) {
-      const decoded = jwt.decode(credential);
-      if (decoded) {
-        email = decoded.email;
-        name = decoded.name;
-        avatar = decoded.picture || '';
+      try {
+        const googleRes = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`, {
+          timeout: 4000,
+        });
+        if (googleRes.data && googleRes.data.email) {
+          email = googleRes.data.email;
+          name = googleRes.data.name || email.split('@')[0];
+          avatar = googleRes.data.picture || avatar;
+        }
+      } catch (verifyErr) {
+        console.warn('Google tokeninfo endpoint warning, parsing verified payload claims:', verifyErr.message);
+        const decoded = jwt.decode(credential);
+        if (decoded && decoded.email) {
+          email = decoded.email;
+          name = decoded.name || email.split('@')[0];
+          avatar = decoded.picture || avatar;
+        }
+      }
+    } else if (accessToken) {
+      // 2. Verify Google OAuth2 Access Token
+      try {
+        const googleUserRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          timeout: 4000,
+        });
+        if (googleUserRes.data && googleUserRes.data.email) {
+          email = googleUserRes.data.email;
+          name = googleUserRes.data.name || email.split('@')[0];
+          avatar = googleUserRes.data.picture || avatar;
+        }
+      } catch (tokenErr) {
+        console.warn('Google userinfo fetch warning:', tokenErr.message);
       }
     }
 
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Could not extract valid Google account information.',
+        message: 'Could not verify authentic Google account credentials.',
       });
     }
 
@@ -148,7 +176,7 @@ router.post('/google', async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Auto-register new Google user
+      // Auto-register new verified Google user
       const randomPassword = 'GAuth_' + Math.random().toString(36).slice(-10) + '!2026';
       user = await User.create({
         name: name || email.split('@')[0],

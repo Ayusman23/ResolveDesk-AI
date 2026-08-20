@@ -78,13 +78,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (credential, profile, role = 'client') => {
+  const loginWithGoogle = async (credentialOrPayload, profile, role = 'client') => {
     try {
-      const response = await api.post('/auth/google', {
-        credential,
-        profile,
-        role,
-      });
+      let payload;
+      if (typeof credentialOrPayload === 'object' && credentialOrPayload !== null) {
+        payload = { ...credentialOrPayload, role: credentialOrPayload.role || role };
+      } else {
+        payload = { credential: credentialOrPayload, profile, role };
+      }
+
+      const response = await api.post('/auth/google', payload);
       if (response.data.success) {
         const { token: newToken, user: newUser } = response.data;
         setToken(newToken);
